@@ -1,0 +1,61 @@
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { AuthProvider, useAuth } from './contexts/AuthContext';
+import './App.css';
+import Home from "./pages/Home";
+import Login from "./pages/Login";
+import Signup from "./pages/Signup";
+import Dashboard from "./pages/Dashboard";
+
+// Protected Route Component
+interface ProtectedRouteProps {
+  children: React.ReactNode;
+}
+
+const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
+  const { isAuthenticated, loading, isClerkLoaded, isClerkSignedIn, hasBackendSyncFailed, isBackendSyncInProgress } = useAuth();
+
+  if (!isClerkLoaded || loading) {
+    return <div>Loading...</div>; // Or a spinner component
+  }
+
+  // User is considered authorized if they are signed in with Clerk
+  // This prevents redirect loops during backend sync
+  // The dashboard will handle incomplete sync states separately
+  const isAuthorized = isClerkSignedIn && !hasBackendSyncFailed;
+
+  return isAuthorized ? children : <Navigate to="/login" replace />;
+};
+
+// Wrapper component to access auth context
+const AppContent: React.FC = () => {
+  const { isClerkLoaded, isClerkSignedIn, loading } = useAuth();
+
+  if (!isClerkLoaded || loading) {
+    return <div>Loading...</div>; // Or a spinner component
+  }
+
+  return (
+    <Routes>
+      <Route path="/" element={<Home />} />
+      <Route path="/login/*" element={<Login />} />
+      <Route path="/signup/*" element={<Signup />} />
+      <Route path="/dashboard" element={
+        <ProtectedRoute>
+          <Dashboard />
+        </ProtectedRoute>
+      } />
+    </Routes>
+  );
+};
+
+function App() {
+  return (
+    <AuthProvider>
+      <BrowserRouter>
+        <AppContent />
+      </BrowserRouter>
+    </AuthProvider>
+  );
+}
+
+export default App;
