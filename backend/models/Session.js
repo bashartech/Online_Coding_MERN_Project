@@ -12,14 +12,12 @@ const sessionSchema = new mongoose.Schema(
       default: ""
     },
     ownerId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
+      type: String,  // Store Clerk user ID as string instead of ObjectId
       required: true
     },
     collaborators: [
       {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "User"
+        type: String  // Store Clerk user IDs as strings instead of ObjectId
       }
     ],
     isPublic: {
@@ -46,6 +44,11 @@ const sessionSchema = new mongoose.Schema(
     },
     accessCode: {
       type: String
+    },
+    code: {
+      type: String,
+      default: "console.log('Hello World');",
+      maxlength: 10000 // Limit to 10,000 characters as per requirements
     }
   },
   { timestamps: true }

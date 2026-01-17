@@ -5,6 +5,7 @@ import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import Dashboard from "./pages/Dashboard";
+import SessionEditor from "./pages/session/[sessionId]";
 
 // Protected Route Component
 interface ProtectedRouteProps {
@@ -42,6 +43,11 @@ const AppContent: React.FC = () => {
       <Route path="/dashboard" element={
         <ProtectedRoute>
           <Dashboard />
+        </ProtectedRoute>
+      } />
+      <Route path="/session/:sessionId" element={
+        <ProtectedRoute>
+          <SessionEditor />
         </ProtectedRoute>
       } />
     </Routes>

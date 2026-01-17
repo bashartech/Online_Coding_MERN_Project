@@ -1,45 +1,18 @@
 import express from 'express';
-import { createSession, saveSnippet, getSession, addCollaborator } from '../controllers/sessionController.js';
-import { clerkMiddleware } from '@clerk/express'; // Use Clerk's auth middleware
-import Session from '../models/Session.js';
+import { saveSnippet, addCollaborator } from '../controllers/sessionController.js'; // Existing controller for other functions
+import clerkAuth from '../middleware/auth.js'; // Use our standardized Clerk auth middleware
+import sessionRoutes from './session.routes.js'; // Our new modular session routes
 
 const router = express.Router();
 
-// Create a new session - protect with Clerk auth
-router.post('/sessions', clerkMiddleware(), createSession);
+// Use our new session routes (handles POST, GET, PUT for /sessions)
+router.use('/sessions', sessionRoutes);
 
+// Other existing routes that still use the old controller
 // Save or update a code snippet - protect with Clerk auth
-router.post('/snippets', clerkMiddleware(), saveSnippet);
-
-// Get a specific session - protect with Clerk auth
-router.get('/sessions/:sessionId', clerkMiddleware(), getSession);
+router.post('/snippets', clerkAuth, saveSnippet);
 
 // Add collaborator to session - protect with Clerk auth
-router.put('/sessions/:sessionId/collaborators', clerkMiddleware(), addCollaborator);
-
-// Get all user's sessions - protect with Clerk auth
-router.get('/sessions', clerkMiddleware(), async (req, res) => {
-  try {
-    // Get user from Clerk auth
-    const clerkUserId = req.auth.userId;
-
-    const sessions = await Session.find({
-      $or: [
-        { ownerId: clerkUserId },
-        { collaborators: { $in: [clerkUserId] } }
-      ]
-    }).populate('ownerId', 'username email');
-
-    res.status(200).json({
-      success: true,
-      data: sessions
-    });
-  } catch (error) {
-    res.status(400).json({
-      success: false,
-      message: error.message
-    });
-  }
-});
+router.put('/sessions/:sessionId/collaborators', clerkAuth, addCollaborator);
 
 export default router;

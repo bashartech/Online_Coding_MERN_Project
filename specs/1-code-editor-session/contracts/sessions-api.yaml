@@ -1,0 +1,365 @@
+openapi: 3.0.0
+info:
+  title: Session Management API
+  description: API for managing coding sessions with code persistence
+  version: 1.0.0
+servers:
+  - url: http://localhost:3000/api
+    description: Development server
+  - url: https://yourdomain.com/api
+    description: Production server
+
+paths:
+  /sessions:
+    get:
+      summary: Get all sessions for the authenticated user
+      description: Retrieves a list of all sessions owned by the authenticated user
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: List of user's sessions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SessionSummary'
+        '401':
+          description: Unauthorized - User not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    post:
+      summary: Create a new coding session
+      description: Creates a new coding session with default settings
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                  description: Optional title for the new session
+                  example: "My New Project"
+                language:
+                  type: string
+                  description: Programming language for the session
+                  example: "javascript"
+      responses:
+        '201':
+          description: Session created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateSessionResponse'
+        '400':
+          description: Bad request - invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized - User not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /sessions/{sessionId}:
+    get:
+      summary: Get a specific session
+      description: Retrieves the details of a specific session by ID
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: sessionId
+          in: path
+          required: true
+          description: Unique identifier for the session
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Session details retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionDetail'
+        '401':
+          description: Unauthorized - User not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden - User does not have access to this session
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Session not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    put:
+      summary: Update a specific session
+      description: Updates the code content of a specific session
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: sessionId
+          in: path
+          required: true
+          description: Unique identifier for the session
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - code
+              properties:
+                code:
+                  type: string
+                  description: Updated code content
+                  maxLength: 10000
+                  example: "console.log('Updated code');"
+                language:
+                  type: string
+                  description: Updated programming language
+                  example: "javascript"
+      responses:
+        '200':
+          description: Session updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UpdateSessionResponse'
+        '400':
+          description: Bad request - invalid input or code too long
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized - User not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden - User does not have access to this session
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Session not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    delete:
+      summary: Delete a specific session
+      description: Marks a session as inactive (soft delete)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: sessionId
+          in: path
+          required: true
+          description: Unique identifier for the session
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Session deleted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeleteSessionResponse'
+        '401':
+          description: Unauthorized - User not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden - User does not have access to this session
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Session not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Clerk authentication token
+
+  schemas:
+    SessionSummary:
+      type: object
+      required:
+        - sessionId
+        - title
+        - updatedAt
+        - language
+      properties:
+        sessionId:
+          type: string
+          description: Unique identifier for the session
+          example: "sess_abc123def456"
+        title:
+          type: string
+          description: Title of the session
+          example: "JavaScript Practice"
+        updatedAt:
+          type: string
+          format: date-time
+          description: Last updated timestamp
+          example: "2023-10-20T10:30:00Z"
+        language:
+          type: string
+          description: Programming language of the session
+          example: "javascript"
+
+    SessionDetail:
+      type: object
+      required:
+        - sessionId
+        - title
+        - code
+        - language
+        - createdAt
+        - updatedAt
+      properties:
+        sessionId:
+          type: string
+          description: Unique identifier for the session
+          example: "sess_abc123def456"
+        title:
+          type: string
+          description: Title of the session
+          example: "JavaScript Practice"
+        code:
+          type: string
+          description: The actual code content
+          maxLength: 10000
+          example: "console.log('Hello World');"
+        language:
+          type: string
+          description: Programming language of the session
+          example: "javascript"
+        createdAt:
+          type: string
+          format: date-time
+          description: Creation timestamp
+          example: "2023-10-20T09:00:00Z"
+        updatedAt:
+          type: string
+          format: date-time
+          description: Last updated timestamp
+          example: "2023-10-20T10:30:00Z"
+
+    CreateSessionResponse:
+      type: object
+      required:
+        - sessionId
+        - success
+      properties:
+        sessionId:
+          type: string
+          description: Unique identifier for the created session
+          example: "sess_abc123def456"
+        success:
+          type: boolean
+          description: Indicates if the operation was successful
+          example: true
+
+    UpdateSessionResponse:
+      type: object
+      required:
+        - success
+      properties:
+        success:
+          type: boolean
+          description: Indicates if the operation was successful
+          example: true
+
+    DeleteSessionResponse:
+      type: object
+      required:
+        - success
+      properties:
+        success:
+          type: boolean
+          description: Indicates if the operation was successful
+          example: true
+
+    Error:
+      type: object
+      required:
+        - error
+        - message
+      properties:
+        error:
+          type: string
+          description: Error type
+          example: "Unauthorized"
+        message:
+          type: string
+          description: Detailed error message
+          example: "User not authenticated"

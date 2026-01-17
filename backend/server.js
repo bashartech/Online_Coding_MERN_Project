@@ -21,7 +21,7 @@ const server = http.createServer(app);
 // Initialize Socket.IO with CORS configuration
 const io = new SocketIOServer(server, {
   cors: {
-    origin: process.env.SOCKET_IO_CORS_ORIGIN || "http://localhost:3000",
+    origin: process.env.SOCKET_IO_CORS_ORIGIN || "http://localhost:3000" || "http://localhost:5173",
     methods: ["GET", "POST"]
   }
 });
@@ -40,7 +40,7 @@ app.use('/api', apiRoutes);
 app.get('/', (req, res) => {
   res.send('Online Code Collaboration Platform API');
 });
-
+ 
 // Example route to create a user
 app.post('/api/users', async (req, res) => {
   try {
@@ -51,25 +51,8 @@ app.post('/api/users', async (req, res) => {
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
-});
-
-// Example route to create a session
-app.post('/api/sessions', async (req, res) => {
-  try {
-    const { title, ownerId, language, isPublic } = req.body;
-    const session = new Session({
-      title,
-      ownerId,
-      language,
-      isPublic,
-      sessionKey: Math.random().toString(36).substring(2, 10) // Generate random session key
-    });
-    await session.save();
-    res.status(201).json(session);
-  } catch (error) {
-    res.status(400).json({ error: error.message });
-  }
-});
+}); 
+ 
 
 // Socket.IO for real-time collaboration
 io.on('connection', (socket) => {
@@ -85,7 +68,7 @@ io.on('connection', (socket) => {
       message: 'A new user joined the session'
     });
   });
-
+ 
   // Handle real-time code changes
   socket.on('code-change', async (data) => {
     const { sessionKey, code, userId, language } = data;

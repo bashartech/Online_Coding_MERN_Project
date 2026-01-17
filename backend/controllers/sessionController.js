@@ -7,7 +7,15 @@ import File from '../models/File.js';
 export const createSession = async (req, res) => {
   try {
     const { title, description, language, isPublic } = req.body;
-    const userId = req.user.id; // Assuming user is authenticated
+    const auth = await req.auth(); // Clerk authentication
+    const userId = auth.userId;
+
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        message: 'User not authenticated'
+      });
+    }
 
     // Create new session
     const session = new Session({
@@ -37,7 +45,15 @@ export const createSession = async (req, res) => {
 export const saveSnippet = async (req, res) => {
   try {
     const { title, content, language, sessionId } = req.body;
-    const userId = req.user.id;
+    const auth = await req.auth(); // Clerk authentication
+    const userId = auth.userId;
+
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        message: 'User not authenticated'
+      });
+    }
 
     // Create or update snippet
     const snippet = await Snippet.findOneAndUpdate(
@@ -100,6 +116,17 @@ export const getSession = async (req, res) => {
 export const addCollaborator = async (req, res) => {
   try {
     const { sessionId, email } = req.body;
+
+    // Authenticate user with Clerk
+    const auth = await req.auth();
+    const userId = auth.userId;
+
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        message: 'User not authenticated'
+      });
+    }
 
     // Find user by email
     const user = await User.findOne({ email });
