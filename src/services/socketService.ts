@@ -261,3 +261,23 @@ export const onConnectError = (callback: (error: any) => void): void => {
     socket.off('connect_error').on('connect_error', callback);
   }
 };
+
+/**
+ * Join a session via access code
+ * @param {string} accessCode - The access code to join the session
+ * @param {string} userId - The user ID
+ * @param {Function} callback - Callback function to handle connection response
+ */
+export const joinSessionViaCode = (accessCode: string, userId: string, callback: (error: { error: string } | null, result: any) => void): void => {
+  if (socket) {
+    socket.emit('join-session-via-code', { accessCode, userId });
+
+    // Listen for errors - we'll use a once listener for one-time join responses
+    const handleError = (errorData: { error: string }) => {
+      console.error('Socket error:', errorData);
+      callback(errorData, null);
+    };
+
+    socket.once('error', handleError);
+  }
+};

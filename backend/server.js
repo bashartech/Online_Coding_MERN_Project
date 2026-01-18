@@ -112,7 +112,75 @@ io.on('connection', (socket) => {
       users: getActiveUsersInSession(sessionKey)
     });
   });
- 
+
+  // Join a session room via access code - with authorization check
+  socket.on('join-session-via-code', async (data) => {
+    const { accessCode, userId } = data;
+
+    console.log(`User ${userId} attempting to join session via access code ${accessCode}`);
+
+    // Find session by access code
+    const session = await Session.findOne({ accessCode: accessCode, isActive: true });
+
+    if (!session) {
+      socket.emit('error', { error: 'Invalid access code or session not found' });
+      return;
+    }
+
+    const sessionKey = session.sessionKey;
+
+    // Store userId in socket for later use
+    socket.userId = userId;
+
+    // Check if user has access to this session (either owner or collaborator)
+    let hasAccess = await checkSessionAccess(userId, sessionKey);
+
+    // If user doesn't have access yet, add them as a collaborator if the access code is valid
+    if (!hasAccess) {
+      // Add user to collaborators list
+      if (!session.collaborators.includes(userId)) {
+        session.collaborators.push(userId);
+        await session.save();
+      }
+
+      // Now check access again
+      hasAccess = await checkSessionAccess(userId, sessionKey);
+    }
+
+    if (!hasAccess) {
+      socket.emit('error', { error: 'Access denied to session' });
+      return;
+    }
+
+    socket.join(sessionKey);
+
+    // Log successful join
+    console.log(`User ${userId} joined room ${sessionKey} via access code ${accessCode}`);
+
+    // Add user to presence tracker
+    addUserToSession(sessionKey, userId, {
+      socketId: socket.id,
+      joinedAt: new Date()
+    });
+
+    // Notify others in the room
+    socket.to(sessionKey).emit('user-joined', {
+      userId: socket.id,
+      message: 'A new user joined the session',
+      userCount: getActiveUsersInSession(sessionKey).length
+    });
+
+    // Emit current presence list to the joining user
+    socket.emit('presence-list', {
+      users: getActiveUsersInSession(sessionKey)
+    });
+
+    // Broadcast updated presence list to all users in the session
+    io.to(sessionKey).emit('presence-update', {
+      users: getActiveUsersInSession(sessionKey)
+    });
+  });
+
   // Handle real-time code changes - with authorization check and rate limiting
   socket.on('code-change', async (data) => {
     const { sessionKey, code, userId, language } = data;
@@ -183,7 +251,7 @@ io.on('connection', (socket) => {
       console.error('Error saving code to database:', error);
     }
   });
-
+ 
   // Handle leaving a session
   socket.on('leave-session', async (data) => {
     const { sessionKey } = data;
@@ -216,9 +284,15 @@ io.on('connection', (socket) => {
     });
   });
 
-  // Handle chat messages - with authorization check
+  // Handle chat messages - with authorization check and rate limiting
   socket.on('send-message', async (data) => {
     const { sessionKey, userId, message } = data;
+
+    // Check if user is rate limited
+    if (isRateLimited(userId, 'send-message', 10, 3000)) { // Max 10 messages per 3 seconds
+      socket.emit('error', { error: 'Too many messages sent' });
+      return;
+    }
 
     // Check if user has access to this session
     const hasAccess = await checkSessionAccess(userId, sessionKey);
@@ -237,13 +311,23 @@ io.on('connection', (socket) => {
       });
       await chatMessage.save();
 
-      // Broadcast message to all users in the session
+      // Log the broadcast
+      console.log(`About to broadcast message to room: ${sessionKey}`);
+
+      // Get the number of clients in the room to debug
+      const room = io.sockets.adapter.rooms.get(sessionKey);
+      const numClients = room ? room.size : 0;
+      console.log(`Room ${sessionKey} has ${numClients} clients (excluding sender)`);
+
+      // Broadcast message to ALL users in the session (including sender for immediate feedback)
       io.to(sessionKey).emit('receive-message', {
         senderId: userId,
         message: message,
         timestamp: new Date(),
         messageId: chatMessage._id
       });
+
+      console.log(`Broadcasted message to room: ${sessionKey}`);
     } catch (error) {
       console.error('Error saving message to database:', error);
     }

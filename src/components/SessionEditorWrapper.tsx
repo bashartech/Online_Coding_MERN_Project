@@ -17,8 +17,12 @@ import {
   onPresenceUpdate,
   onPresenceList,
   onUserJoined,
-  onUserLeft
+  onUserLeft,
+  sendMessage,
+  onReceiveMessage
 } from '../services/socketService';
+import ChatPanel from './ChatPanel';
+import ShareSessionModal from './ShareSessionModal';
 
 interface Session {
   sessionId: string;
@@ -42,6 +46,11 @@ const SessionEditorWrapper: React.FC = () => {
   const [isSocketConnected, setIsSocketConnected] = useState<boolean>(false);
   const [socketConnectionError, setSocketConnectionError] = useState<string | null>(null);
   const [activeUsers, setActiveUsers] = useState<any[]>([]);
+  const [messages, setMessages] = useState<any[]>([]);
+  const [showChat, setShowChat] = useState<boolean>(false);
+  const [showShareModal, setShowShareModal] = useState<boolean>(false);
+  const [accessCode, setAccessCode] = useState<string>('');
+  const [generatingLink, setGeneratingLink] = useState<boolean>(false);
   const socketInitialized = useRef<boolean>(false);
 
   // Initialize socket infrastructure once when component mounts
@@ -125,6 +134,19 @@ const SessionEditorWrapper: React.FC = () => {
     onUserLeft((data) => {
       console.log('User left:', data);
       // The presence update will come through onPresenceUpdate
+    });
+
+    // Listen for chat messages from all users (including self for immediate feedback)
+    onReceiveMessage((data) => {
+      console.log('Received chat message:', data);
+      setMessages(prev => {
+        // Check if this message is already in the state to prevent duplicates
+        const messageExists = prev.some(msg => msg.messageId === data.messageId);
+        if (!messageExists) {
+          return [...prev, data];
+        }
+        return prev;
+      });
     });
 
     socketInitialized.current = true;
@@ -326,6 +348,45 @@ const SessionEditorWrapper: React.FC = () => {
     }
   };
 
+  // Handle sending a chat message
+  const handleSendMessage = (message: string) => {
+    if (session && user && isSocketConnected) {
+      sendMessage(session.sessionKey, user.id, message);
+    }
+  };
+
+  // Handle generating a share link
+  const handleGenerateLink = async (): Promise<string> => {
+    if (!session || !user) {
+      throw new Error('Session or user not available');
+    }
+
+    setGeneratingLink(true);
+    try {
+      // Get the Clerk authentication token
+      const token = clerkSession ? await clerkSession.getToken() : null;
+
+      const response = await apiClient.post(
+        `/api/sessions/${session.sessionId}/generate-access-code`,
+        {},
+        token || undefined
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        setAccessCode(data.accessCode);
+        return data.accessCode;
+      } else {
+        throw new Error('Failed to generate access code');
+      }
+    } catch (error) {
+      console.error('Error generating access code:', error);
+      throw error;
+    } finally {
+      setGeneratingLink(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-screen">
@@ -402,9 +463,15 @@ const SessionEditorWrapper: React.FC = () => {
                 </div>
               )}
               <button
+                onClick={() => setShowShareModal(true)}
+                className="ml-2 px-4 py-2 text-sm font-medium text-white bg-purple-600 rounded-md hover:bg-purple-700"
+              >
+                Share Session
+              </button>
+              <button
                 onClick={handleSave}
                 disabled={saving}
-                className={`px-4 py-2 text-sm font-medium text-white rounded-md ${
+                className={`ml-2 px-4 py-2 text-sm font-medium text-white rounded-md ${
                   saving ? 'bg-gray-400' : 'bg-blue-600 hover:bg-blue-700'
                 }`}
               >
@@ -427,6 +494,32 @@ const SessionEditorWrapper: React.FC = () => {
           </div>
         </div>
       </main>
+
+      {/* Chat Panel */}
+      <ChatPanel
+        currentUser={user ? {
+          id: user.id,
+          firstName: user.firstName || undefined,
+          lastName: user.lastName || undefined,
+          avatar: user.imageUrl
+        } : null}
+        sessionId={session.sessionKey}
+        onSendMessage={handleSendMessage}
+        messages={messages}
+        activeUsers={activeUsers}
+        isVisible={showChat}
+        onClose={() => setShowChat(false)}
+        onToggleChat={() => setShowChat(!showChat)}
+      />
+
+      {/* Share Session Modal */}
+      <ShareSessionModal
+        isOpen={showShareModal}
+        onClose={() => setShowShareModal(false)}
+        sessionId={session.sessionId}
+        onGenerateLink={handleGenerateLink}
+        isLoading={generatingLink}
+      />
     </div>
   );
 };

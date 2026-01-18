@@ -314,3 +314,113 @@ export const deleteSession = async (req, res) => {
     });
   }
 };
+
+/**
+ * Generate an access code for a session
+ */
+export const generateAccessCode = async (req, res) => {
+  try {
+    const { sessionId } = req.params;
+    const auth = await req.auth();
+    const userId = auth.userId;
+
+    if (!userId) {
+      return res.status(401).json({
+        error: 'Unauthorized',
+        message: 'User not authenticated'
+      });
+    }
+
+    const session = await Session.findById(sessionId);
+
+    if (!session) {
+      return res.status(404).json({
+        error: 'Not Found',
+        message: 'Session not found'
+      });
+    }
+
+    // Verify user owns the session
+    if (session.ownerId !== userId) {
+      return res.status(403).json({
+        error: 'Forbidden',
+        message: 'Access denied to this session'
+      });
+    }
+
+    // Generate a unique access code (8-character alphanumeric)
+    const generateUniqueCode = async () => {
+      let code;
+      let attempts = 0;
+      const maxAttempts = 10; // Prevent infinite loop
+
+      do {
+        // Generate 8-character alphanumeric code
+        code = Math.random().toString(36).substring(2, 10).toUpperCase();
+        attempts++;
+
+        if (attempts >= maxAttempts) {
+          return res.status(500).json({
+            error: 'Internal Server Error',
+            message: 'Unable to generate unique access code'
+          });
+        }
+      } while (await Session.findOne({ accessCode: code }));
+
+      return code;
+    };
+
+    const accessCode = await generateUniqueCode();
+
+    // Update session with the access code
+    session.accessCode = accessCode;
+    await session.save();
+
+    res.status(200).json({
+      success: true,
+      accessCode: accessCode,
+      message: 'Access code generated successfully'
+    });
+  } catch (error) {
+    console.error('Error generating access code:', error);
+    res.status(500).json({
+      error: 'Internal Server Error',
+      message: 'Failed to generate access code'
+    });
+  }
+};
+
+/**
+ * Get session details by access code
+ */
+export const getSessionByAccessCode = async (req, res) => {
+  try {
+    const { accessCode } = req.params;
+
+    const session = await Session.findOne({ accessCode: accessCode, isActive: true });
+
+    if (!session) {
+      return res.status(404).json({
+        error: 'Not Found',
+        message: 'Session not found or access code invalid'
+      });
+    }
+
+    res.status(200).json({
+      sessionId: session._id.toString(),
+      sessionKey: session.sessionKey,
+      title: session.title,
+      ownerId: session.ownerId,
+      collaborators: session.collaborators,
+      maxParticipants: session.maxParticipants,
+      isActive: session.isActive,
+      accessCode: session.accessCode
+    });
+  } catch (error) {
+    console.error('Error getting session by access code:', error);
+    res.status(500).json({
+      error: 'Internal Server Error',
+      message: 'Failed to retrieve session'
+    });
+  }
+};

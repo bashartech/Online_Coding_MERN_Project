@@ -3,19 +3,19 @@ import mongoose from "mongoose";
 const chatMessageSchema = new mongoose.Schema(
   {
     sessionId: {
-      type: mongoose.Schema.Types.ObjectId,
+      type: String,  // Use string to match Session model's sessionKey
       ref: "Session",
       required: true
     },
     senderId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
+      type: String,  // Store Clerk user ID as string instead of ObjectId
       required: true
     },
     message: {
       type: String,
       required: true,
-      trim: true
+      trim: true,
+      maxlength: 1000 // Limit message length
     },
     messageType: {
       type: String,
@@ -25,8 +25,7 @@ const chatMessageSchema = new mongoose.Schema(
     readBy: [
       {
         userId: {
-          type: mongoose.Schema.Types.ObjectId,
-          ref: "User"
+          type: String, // Store Clerk user ID as string
         },
         readAt: {
           type: Date,
