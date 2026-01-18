@@ -86,13 +86,39 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
     <div className="editor-container flex h-full bg-gray-900 text-white">
       {/* Simple Editor Area - Full width since we removed file explorer */}
       <div className="w-full flex flex-col">
-        {/* Simple Tab Bar - Just showing the filename */}
+        {/* Tab Bar with filename and language selector */}
         <div className="bg-gray-800 border-b border-gray-700 flex items-center">
           <div className="px-4 py-2 text-sm bg-gray-900 text-white border-r border-gray-700">
-            <div className="flex items-center">
+            {/* <div className="flex items-center">
               🐍 main.py
-            </div>
+            </div> */}
           </div>
+
+          {/* Language selector dropdown */}
+          <select
+            value={effectiveLanguage}
+            onChange={(e) => {
+              // Update the language in the parent component by triggering a code change with the same code but new language
+              if (onCodeChange) {
+                onCodeChange(effectiveCode, e.target.value, 'main.py');
+              }
+            }}
+            className="bg-gray-700 text-white border-none focus:outline-none focus:ring-2 focus:ring-blue-500 px-3 py-2 text-sm"
+          >
+            <option value="javascript">JavaScript</option>
+            <option value="python">Python</option>
+            <option value="java">Java</option>
+            <option value="cpp">C++</option>
+            <option value="c">C</option>
+            <option value="html">HTML</option>
+            <option value="css">CSS</option>
+            <option value="typescript">TypeScript</option>
+            <option value="go">Go</option>
+            <option value="rust">Rust</option>
+            <option value="php">PHP</option>
+            <option value="ruby">Ruby</option>
+            <option value="sql">SQL</option>
+          </select>
         </div>
 
         {/* Editor */}

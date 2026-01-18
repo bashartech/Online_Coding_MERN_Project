@@ -19,7 +19,9 @@ import {
   onUserJoined,
   onUserLeft,
   sendMessage,
-  onReceiveMessage
+  onReceiveMessage,
+  onLanguageUpdate,
+  sendLanguageChange
 } from '../services/socketService';
 import ChatPanel from './ChatPanel';
 import ShareSessionModal from './ShareSessionModal';
@@ -146,6 +148,21 @@ const SessionEditorWrapper: React.FC = () => {
           return [...prev, data];
         }
         return prev;
+      });
+    });
+
+    // Listen for language updates from other users (when they change language without changing code)
+    onLanguageUpdate((data) => {
+      console.log('Received language-update:', data);
+      // Update the session language when another user changes it
+      setSession(prev => {
+        if (!prev || prev.sessionId !== session?.sessionId) {
+          return prev;
+        }
+        return {
+          ...prev,
+          language: data.language
+        };
       });
     });
 
@@ -327,11 +344,37 @@ const SessionEditorWrapper: React.FC = () => {
           language: language
         } : null);
 
-        // Send real-time update to other users in the session using sessionKey
-        console.log('Sending code change to session:', session.sessionKey, 'Code:', newValue?.substring(0, 50));
-        if (isSocketConnected) {
-          sendCodeChange(session.sessionKey, newValue || '', user.id, language);
-        }
+        // Update local state first
+        setSession(prev => {
+          if (!prev) return null;
+
+          // Determine if code or language changed
+          const codeChanged = prev.code !== (newValue || '');
+          const languageChanged = prev.language !== language;
+
+          // Send appropriate update to other users
+          if (isSocketConnected) {
+            console.log('Sending update to session:', prev.sessionKey, 'Code changed:', codeChanged, 'Language changed:', languageChanged, 'Code excerpt:', newValue?.substring(0, 50), 'Language:', language);
+
+            if (codeChanged) {
+              // Send code change which includes language
+              sendCodeChange(prev.sessionKey, newValue || '', user.id, language);
+            } else if (languageChanged) {
+              // Only language changed, send language change event
+              sendLanguageChange(prev.sessionKey, user.id, language);
+            } else if (!codeChanged && !languageChanged) {
+              // No changes, but still update if needed for synchronization
+              sendCodeChange(prev.sessionKey, newValue || '', user.id, language);
+            }
+          }
+
+          // Return updated session
+          return {
+            ...prev,
+            code: newValue || '',
+            language: language
+          };
+        });
       } catch (error) {
         console.error('Error in handleCodeChange:', error);
       }

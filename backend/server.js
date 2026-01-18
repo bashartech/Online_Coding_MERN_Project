@@ -251,7 +251,42 @@ io.on('connection', (socket) => {
       console.error('Error saving code to database:', error);
     }
   });
- 
+
+  // Handle language changes - with authorization check
+  socket.on('language-change', async (data) => {
+    const { sessionKey, userId, language } = data;
+
+    console.log(`Received language-change from user ${userId} for session ${sessionKey}: ${language}`);
+
+    // Check if user has access to this session
+    const hasAccess = await checkSessionAccess(userId, sessionKey);
+
+    if (!hasAccess) {
+      socket.emit('error', { error: 'Access denied to session' });
+      return;
+    }
+
+    try {
+      // Update the language in the user's snippet
+      const snippet = await Snippet.findOneAndUpdate(
+        { sessionId: sessionKey, author: userId },
+        { language: language },
+        { new: true, upsert: true } // Create if doesn't exist
+      );
+
+      // Broadcast the language change to ALL users in the session (including sender)
+      io.to(sessionKey).emit('language-update', {
+        userId: userId,
+        language: language,
+        timestamp: new Date()
+      });
+
+      console.log(`Broadcasted language-update to room: ${sessionKey}`);
+    } catch (error) {
+      console.error('Error updating language in database:', error);
+    }
+  });
+
   // Handle leaving a session
   socket.on('leave-session', async (data) => {
     const { sessionKey } = data;

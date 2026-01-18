@@ -85,6 +85,36 @@ export const sendCodeChange = (sessionKey: string, code: string, userId: string,
 };
 
 /**
+ * Send a language change to the session
+ * @param {string} sessionKey - The session key
+ * @param {string} userId - The user ID
+ * @param {string} language - The new programming language
+ */
+export const sendLanguageChange = (sessionKey: string, userId: string, language: string): void => {
+  if (socket) {
+    socket.emit('language-change', {
+      sessionKey,
+      userId,
+      language
+    });
+  }
+};
+
+/**
+ * Listen for language updates from other users
+ * @param {Function} callback - Callback function to handle language updates
+ */
+export const onLanguageUpdate = (callback: (data: {
+  userId: string;
+  language: string;
+  timestamp: Date;
+}) => void): void => {
+  if (socket) {
+    socket.off('language-update').on('language-update', callback);
+  }
+};
+
+/**
  * Send a message to the session
  * @param {string} sessionKey - The session key
  * @param {string} userId - The user ID
