@@ -1,4 +1,5 @@
 import Session from '../models/Session.js';
+import Snippet from '../models/Snippet.js';
 import { v4 as uuidv4 } from 'uuid'; // Import uuid for generating session keys
 
 /**
@@ -81,11 +82,28 @@ export const getSessionById = async (req, res) => {
       });
     }
 
+    // Retrieve file-specific code snippets for this user in this session
+    const userSnippets = await Snippet.find({
+      sessionId: session.sessionKey, // Use sessionKey to match the Snippet schema
+      author: userId
+    });
+
+    // Convert to a map of fileName -> { code, language }
+    const files = {};
+    userSnippets.forEach(snippet => {
+      files[snippet.fileName] = {
+        code: snippet.content,
+        language: snippet.language
+      };
+    });
+
     res.status(200).json({
       sessionId: session._id.toString(),
+      sessionKey: session.sessionKey,
       title: session.title,
-      code: session.code || '', // Return existing code or empty string
+      code: session.code || '', // Return existing code or empty string,
       language: session.language,
+      files: files, // Include file-specific data
       createdAt: session.createdAt,
       updatedAt: session.updatedAt
     });
@@ -132,7 +150,46 @@ export const updateSession = async (req, res) => {
       });
     }
 
-    // Update allowed fields
+    // Handle file-specific updates if provided
+    if (req.body.files) {
+      // Process each file in the files object
+      for (const [fileName, fileData] of Object.entries(req.body.files)) {
+        // Validate code length (max 10,000 characters)
+        if (fileData.code && fileData.code.length > 10000) {
+          return res.status(400).json({
+            error: 'Bad Request',
+            message: `Code for ${fileName} exceeds maximum length of 10,000 characters`
+          });
+        }
+
+        // Find or update snippet for this specific file
+        let snippet = await Snippet.findOne({
+          sessionId: session.sessionKey,
+          author: userId,
+          fileName: fileName
+        });
+
+        if (snippet) {
+          // Update existing snippet
+          snippet.content = fileData.code || snippet.content;
+          snippet.language = fileData.language || snippet.language;
+          await snippet.save();
+        } else {
+          // Create new snippet
+          snippet = new Snippet({
+            title: `Code by ${userId} - ${fileName}`,
+            content: fileData.code || '',
+            language: fileData.language || 'javascript',
+            fileName: fileName,
+            author: userId,
+            sessionId: session.sessionKey
+          });
+          await snippet.save();
+        }
+      }
+    }
+
+    // Update other allowed fields in the session
     if (code !== undefined) {
       // Validate code length (max 10,000 characters)
       if (code.length > 10000) {

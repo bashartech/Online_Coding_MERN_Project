@@ -1,11 +1,28 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useSession, useUser } from '@clerk/clerk-react';
 import CodeEditor from './codeEditor';
+import PresenceIndicator from './PresenceIndicator';
 import apiClient from '../utils/api';
+import {
+  initSocket,
+  joinSession,
+  sendCodeChange,
+  disconnectSocket,
+  onCodeUpdate,
+  onError,
+  onConnect,
+  onDisconnect,
+  onConnectError,
+  onPresenceUpdate,
+  onPresenceList,
+  onUserJoined,
+  onUserLeft
+} from '../services/socketService';
 
 interface Session {
   sessionId: string;
+  sessionKey: string;
   title: string;
   code: string;
   language: string;
@@ -17,11 +34,130 @@ const SessionEditorWrapper: React.FC = () => {
   const { sessionId } = useParams<{ sessionId: string }>();
   const navigate = useNavigate();
   const { session: clerkSession } = useSession();
-  const { isSignedIn } = useUser();
+  const { isSignedIn, user } = useUser(); // Get user info for socket connection
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState<boolean>(false);
+  const [isSocketConnected, setIsSocketConnected] = useState<boolean>(false);
+  const [socketConnectionError, setSocketConnectionError] = useState<string | null>(null);
+  const [activeUsers, setActiveUsers] = useState<any[]>([]);
+  const socketInitialized = useRef<boolean>(false);
+
+  // Initialize socket infrastructure once when component mounts
+  useEffect(() => {
+    // Initialize socket connection
+    initSocket(import.meta.env.VITE_BACKEND_URL);
+
+    // Listen for code updates from other users
+    onCodeUpdate((data) => {
+      console.log('Received code-update:', data, 'Current session:', session?.sessionKey, 'Session available:', !!session);
+      // Update whenever we receive a valid update (server already excludes sender)
+      // We don't check if session exists here because we want to update when it becomes available
+      console.log('Processing code update');
+      setSession(prev => {
+        if (!prev) {
+          console.log('No session available to update');
+          return null;
+        }
+        console.log('Setting new code:', data.code.substring(0, 50));
+        return {
+          ...prev,
+          code: data.code,
+          language: data.language
+        };
+      });
+    });
+
+
+    // Listen for socket errors
+    onError((error) => {
+      console.error('Socket error:', error);
+      setSocketConnectionError(error.error || 'Socket connection error');
+      setError(error.error || 'Socket connection error');
+    });
+
+    // Listen for connection events
+    onConnect(() => {
+      console.log('Socket reconnected');
+      setIsSocketConnected(true);
+      setSocketConnectionError(null);
+
+      // Rejoin session after reconnection if session and user are available
+      if (session && user) {
+        const sessionKey = session.sessionKey; // Use the sessionKey from the session data
+        joinSession(sessionKey, user.id, (error, result) => {
+          if (error) {
+            console.error('Error rejoining session:', error);
+            setSocketConnectionError(error.error || 'Failed to rejoin session');
+          } else {
+            setSocketConnectionError(null);
+          }
+        });
+      }
+    });
+
+    onDisconnect((reason) => {
+      console.log('Socket disconnected:', reason);
+      setIsSocketConnected(false);
+      setSocketConnectionError('Disconnected from server');
+    });
+
+    onConnectError((error) => {
+      console.error('Socket connection error:', error);
+      setSocketConnectionError('Connection error occurred');
+    });
+
+    // Listen for presence updates
+    onPresenceList((data) => {
+      setActiveUsers(data.users);
+    });
+
+    onPresenceUpdate((data) => {
+      setActiveUsers(data.users);
+    });
+
+    onUserJoined((data) => {
+      console.log('User joined:', data);
+      // The presence update will come through onPresenceUpdate
+    });
+
+    onUserLeft((data) => {
+      console.log('User left:', data);
+      // The presence update will come through onPresenceUpdate
+    });
+
+    socketInitialized.current = true;
+
+    // Clean up on component unmount
+    return () => {
+      if (socketInitialized.current) {
+        disconnectSocket();
+        socketInitialized.current = false;
+        setIsSocketConnected(false);
+      }
+    };
+  }, []); // Empty dependency array - only run once on mount
+
+  // Join session when session and user are available
+  useEffect(() => {
+    if (session && user && socketInitialized.current) {
+      // Join the session using sessionKey for socket operations
+      const sessionKey = session.sessionKey; // Use the sessionKey from the session data
+
+      joinSession(sessionKey, user.id, (error, result) => {
+        if (error) {
+          console.error('Error joining session:', error);
+          setSocketConnectionError(error.error || 'Failed to join session');
+          setError(error.error || 'Failed to join session');
+        } else {
+          setIsSocketConnected(true);
+          setSocketConnectionError(null);
+          console.log('Successfully joined session:', sessionKey);
+        }
+      });
+    }
+  }, [session, user]); // Only run when session or user changes
 
   // Load session data on component mount
   useEffect(() => {
@@ -77,7 +213,7 @@ const SessionEditorWrapper: React.FC = () => {
     if (sessionId) {
       loadSession();
     }
-  }, [sessionId, navigate]);
+  }, [sessionId, navigate, clerkSession, isSignedIn]);
 
   // Handle saving the code
   const handleSave = useCallback(async () => {
@@ -160,14 +296,25 @@ const SessionEditorWrapper: React.FC = () => {
 
   // Handle code changes from the editor
   const handleCodeChange = useCallback((newValue: string | undefined, language: string, fileName: string) => {
-    if (session) {
-      setSession(prev => prev ? {
-        ...prev,
-        code: newValue || '',
-        language: language
-      } : null);
+    if (session && user) {
+      try {
+        // Update local state
+        setSession(prev => prev ? {
+          ...prev,
+          code: newValue || '',
+          language: language
+        } : null);
+
+        // Send real-time update to other users in the session using sessionKey
+        console.log('Sending code change to session:', session.sessionKey, 'Code:', newValue?.substring(0, 50));
+        if (isSocketConnected) {
+          sendCodeChange(session.sessionKey, newValue || '', user.id, language);
+        }
+      } catch (error) {
+        console.error('Error in handleCodeChange:', error);
+      }
     }
-  }, [session]);
+  }, [session, user, isSocketConnected]);
 
   // Handle title change
   const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -233,6 +380,27 @@ const SessionEditorWrapper: React.FC = () => {
               className="text-xl font-semibold text-gray-900 bg-transparent border-none outline-none flex-1"
             />
             <div className="flex items-center space-x-4 ml-4">
+              {/* Presence indicator */}
+              {user && session && (
+                <PresenceIndicator
+                  sessionKey={session.sessionKey}
+                  currentUserId={user.id}
+                  onPresenceUpdate={setActiveUsers}
+                />
+              )}
+
+              {/* Socket connection status indicator */}
+              <div className="flex items-center">
+                <div className={`w-3 h-3 rounded-full mr-2 ${isSocketConnected ? 'bg-green-500' : 'bg-red-500'}`}></div>
+                <span className="text-sm text-gray-600">
+                  {isSocketConnected ? 'Connected' : 'Connecting...'}
+                </span>
+              </div>
+              {socketConnectionError && (
+                <div className="text-sm text-red-500 ml-2" title={socketConnectionError}>
+                  ⚠️ Connection Issue
+                </div>
+              )}
               <button
                 onClick={handleSave}
                 disabled={saving}
@@ -253,6 +421,8 @@ const SessionEditorWrapper: React.FC = () => {
               onCodeChange={handleCodeChange}
               height="100%"
               theme="vs-dark"
+              codeValue={session.code}
+              languageValue={session.language}
             />
           </div>
         </div>
