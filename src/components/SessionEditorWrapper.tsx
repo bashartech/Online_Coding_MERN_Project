@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useSession, useUser } from '@clerk/clerk-react';
+import { useAuth } from '../contexts/AuthContext';
 import CodeEditor from './codeEditor';
 import PresenceIndicator from './PresenceIndicator';
 import apiClient from '../utils/api';
@@ -41,6 +42,7 @@ const SessionEditorWrapper: React.FC = () => {
   const navigate = useNavigate();
   const { session: clerkSession } = useSession();
   const { isSignedIn, user } = useUser(); // Get user info for socket connection
+  const { user: authUser } = useAuth(); // Get our app's user data with role
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -463,6 +465,14 @@ const SessionEditorWrapper: React.FC = () => {
               <h1 className="text-xl font-semibold text-gray-900">Code Editor</h1>
             </div>
             <div className="flex items-center space-x-4">
+              {authUser && authUser.role === 'admin' && (
+                <button
+                  onClick={() => navigate('/admin')}
+                  className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700"
+                >
+                  Admin Dashboard
+                </button>
+              )}
               <button
                 onClick={() => navigate('/dashboard')}
                 className="px-4 py-2 text-sm font-medium text-white bg-gray-600 rounded-md hover:bg-gray-700"

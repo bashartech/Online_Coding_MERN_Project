@@ -7,6 +7,8 @@ import Signup from "./pages/Signup";
 import Dashboard from "./pages/Dashboard";
 import SessionEditor from "./pages/session/[sessionId]";
 import JoinSessionPage from "./pages/JoinSessionPage";
+import AdminDashboard from "./pages/AdminDashboard";
+import AdminProtectedRoute from "./components/AdminProtectedRoute";
 
 // Protected Route Component
 interface ProtectedRouteProps {
@@ -52,6 +54,11 @@ const AppContent: React.FC = () => {
         </ProtectedRoute>
       } />
       <Route path="/session/join/:accessCode" element={<JoinSessionPage />} />
+      <Route path="/admin" element={
+        <AdminProtectedRoute>
+          <AdminDashboard />
+        </AdminProtectedRoute>
+      } />
     </Routes>
   );
 };

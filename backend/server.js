@@ -67,6 +67,42 @@ app.post('/api/users', async (req, res) => {
 io.on('connection', (socket) => {
   console.log('User connected:', socket.id);
 
+  // Join admin monitoring room if user is an admin
+  socket.on('join-admin-room', async (data) => {
+    const { userId } = data;
+
+    try {
+      // Check if user is an admin
+      const user = await User.findOne({ clerkId: userId });
+
+      if (user && user.role === 'admin') {
+        socket.join('admin-room');
+        console.log(`Admin ${userId} joined admin monitoring room`);
+
+        socket.emit('admin-joined', {
+          message: 'Connected to admin monitoring'
+        });
+
+        // Send initial admin data
+        const totalUsers = await User.countDocuments({});
+        const totalSessions = await Session.countDocuments({});
+        const activeSessions = await Session.countDocuments({ isActive: true });
+
+        socket.emit('admin-stats-update', {
+          totalUsers,
+          totalSessions,
+          activeSessions,
+          timestamp: new Date()
+        });
+      } else {
+        socket.emit('error', { error: 'Access denied: Not an admin' });
+      }
+    } catch (error) {
+      console.error('Error checking admin status:', error);
+      socket.emit('error', { error: 'Authentication error' });
+    }
+  });
+
   // Join a session room - with authorization check
   socket.on('join-session', async (data) => {
     const { sessionKey, userId } = data;
@@ -75,15 +111,15 @@ io.on('connection', (socket) => {
 
     // Store userId in socket for later use
     socket.userId = userId;
- 
+
     // Check if user has access to this session
     const hasAccess = await checkSessionAccess(userId, sessionKey);
- 
+
     if (!hasAccess) {
       socket.emit('error', { error: 'Access denied to session' });
       return;
-    } 
-     
+    }
+
     socket.join(sessionKey);
 
     // Log successful join
@@ -110,6 +146,19 @@ io.on('connection', (socket) => {
     // Broadcast updated presence list to all users in the session
     io.to(sessionKey).emit('presence-update', {
       users: getActiveUsersInSession(sessionKey)
+    });
+
+    // Notify admins about the new session activity
+    const sessionInfo = await Session.findOne({ sessionKey: sessionKey }).select('title language isActive createdAt');
+    const userInfo = await User.findOne({ clerkId: userId }).select('username email firstName lastName');
+
+    io.to('admin-room').emit('admin-notification', {
+      type: 'session-join',
+      message: `User ${userInfo?.username || userId} joined session "${sessionInfo?.title || sessionKey}"`,
+      timestamp: new Date(),
+      userId,
+      sessionKey,
+      sessionTitle: sessionInfo?.title
     });
   });
 
@@ -179,6 +228,20 @@ io.on('connection', (socket) => {
     io.to(sessionKey).emit('presence-update', {
       users: getActiveUsersInSession(sessionKey)
     });
+
+    // Notify admins about the new session activity via access code
+    const sessionInfo = await Session.findOne({ sessionKey: sessionKey }).select('title language isActive createdAt');
+    const userInfo = await User.findOne({ clerkId: userId }).select('username email firstName lastName');
+
+    io.to('admin-room').emit('admin-notification', {
+      type: 'session-join-via-code',
+      message: `User ${userInfo?.username || userId} joined session "${sessionInfo?.title || sessionKey}" via access code`,
+      timestamp: new Date(),
+      userId,
+      sessionKey,
+      sessionTitle: sessionInfo?.title,
+      accessCode
+    });
   });
 
   // Handle real-time code changes - with authorization check and rate limiting
@@ -201,7 +264,7 @@ io.on('connection', (socket) => {
       socket.emit('error', { error: 'Access denied to session' });
       return;
     }
- 
+
     // Save the code to database
     try {
       // Find or create a snippet for this user in this session using sessionKey
@@ -245,6 +308,18 @@ io.on('connection', (socket) => {
       });
        console.log("CODE-->>>>",code)
 
+      // Notify admins about the code change
+      const sessionInfo = await Session.findOne({ sessionKey: sessionKey }).select('title');
+      const userInfo = await User.findOne({ clerkId: userId }).select('username email firstName lastName');
+
+      io.to('admin-room').emit('admin-notification', {
+        type: 'code-change',
+        message: `User ${userInfo?.username || userId} updated code in session "${sessionInfo?.title || sessionKey}"`,
+        timestamp: new Date(),
+        userId,
+        sessionKey,
+        sessionTitle: sessionInfo?.title
+      });
 
       console.log(`Broadcasted code-update to room: ${sessionKey}`);
     } catch (error) {
@@ -279,6 +354,20 @@ io.on('connection', (socket) => {
         userId: userId,
         language: language,
         timestamp: new Date()
+      });
+
+      // Notify admins about the language change
+      const sessionInfo = await Session.findOne({ sessionKey: sessionKey }).select('title');
+      const userInfo = await User.findOne({ clerkId: userId }).select('username email firstName lastName');
+
+      io.to('admin-room').emit('admin-notification', {
+        type: 'language-change',
+        message: `User ${userInfo?.username || userId} changed language to ${language} in session "${sessionInfo?.title || sessionKey}"`,
+        timestamp: new Date(),
+        userId,
+        sessionKey,
+        sessionTitle: sessionInfo?.title,
+        language
       });
 
       console.log(`Broadcasted language-update to room: ${sessionKey}`);
@@ -360,6 +449,20 @@ io.on('connection', (socket) => {
         message: message,
         timestamp: new Date(),
         messageId: chatMessage._id
+      });
+
+      // Notify admins about the chat message
+      const sessionInfo = await Session.findOne({ sessionKey: sessionKey }).select('title');
+      const userInfo = await User.findOne({ clerkId: userId }).select('username email firstName lastName');
+
+      io.to('admin-room').emit('admin-notification', {
+        type: 'chat-message',
+        message: `User ${userInfo?.username || userId} sent a message in session "${sessionInfo?.title || sessionKey}": "${message.substring(0, 50)}${message.length > 50 ? '...' : ''}"`,
+        timestamp: new Date(),
+        userId,
+        sessionKey,
+        sessionTitle: sessionInfo?.title,
+        messagePreview: message.substring(0, 50)
       });
 
       console.log(`Broadcasted message to room: ${sessionKey}`);

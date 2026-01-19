@@ -61,5 +61,6 @@ snippetSchema.index({ sessionId: 1, author: 1, fileName: 1 }); // Compound index
 snippetSchema.index({ language: 1 });
 snippetSchema.index({ isPublic: 1 });
 snippetSchema.index({ createdAt: -1 });
+snippetSchema.index({ sessionId: 1, createdAt: -1 }); // For fast snippet queries as specified in Step 8
 
 export default mongoose.model("Snippet", snippetSchema);

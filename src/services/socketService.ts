@@ -311,3 +311,60 @@ export const joinSessionViaCode = (accessCode: string, userId: string, callback:
     socket.once('error', handleError);
   }
 };
+
+/**
+ * Join admin monitoring room
+ * @param {string} userId - The user ID
+ */
+export const joinAdminRoom = (userId: string): void => {
+  if (socket) {
+    socket.emit('join-admin-room', { userId });
+  }
+};
+
+/**
+ * Listen for admin notifications
+ * @param {Function} callback - Callback function to handle admin notifications
+ */
+export const onAdminNotification = (callback: (data: {
+  type: string;
+  message: string;
+  timestamp: Date;
+  userId?: string;
+  sessionKey?: string;
+  sessionTitle?: string;
+  accessCode?: string;
+  language?: string;
+  messagePreview?: string;
+}) => void): void => {
+  if (socket) {
+    socket.off('admin-notification').on('admin-notification', callback);
+  }
+};
+
+/**
+ * Listen for admin stats updates
+ * @param {Function} callback - Callback function to handle admin stats updates
+ */
+export const onAdminStatsUpdate = (callback: (data: {
+  totalUsers: number;
+  totalSessions: number;
+  activeSessions: number;
+  timestamp: Date;
+}) => void): void => {
+  if (socket) {
+    socket.off('admin-stats-update').on('admin-stats-update', callback);
+  }
+};
+
+/**
+ * Listen for admin room join events
+ * @param {Function} callback - Callback function to handle admin room join events
+ */
+export const onAdminJoined = (callback: (data: {
+  message: string;
+}) => void): void => {
+  if (socket) {
+    socket.off('admin-joined').on('admin-joined', callback);
+  }
+};

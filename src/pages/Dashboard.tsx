@@ -164,7 +164,20 @@ const Dashboard: React.FC = () => {
                 <span className="text-sm font-medium text-gray-700">
                   {authUser?.firstName || authUser?.username || 'User'}
                 </span>
+                {authUser?.role === 'admin' && (
+                  <span className="ml-2 px-2 py-1 text-xs font-semibold bg-red-100 text-red-800 rounded-full">
+                    ADMIN
+                  </span>
+                )}
               </div>
+              {authUser?.role === 'admin' && (
+                <button
+                  onClick={() => navigate('/admin')}
+                  className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700"
+                >
+                  Admin Dashboard
+                </button>
+              )}
               <button
                 onClick={async () => {
                   // Clear local token and user data

@@ -41,5 +41,6 @@ const chatMessageSchema = new mongoose.Schema(
 chatMessageSchema.index({ sessionId: 1 });
 chatMessageSchema.index({ senderId: 1 });
 chatMessageSchema.index({ createdAt: -1 });
+chatMessageSchema.index({ sessionId: 1, createdAt: -1 }); // For fast message queries as specified in Step 8
 
 export default mongoose.model("ChatMessage", chatMessageSchema);
