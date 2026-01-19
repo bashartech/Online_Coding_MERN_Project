@@ -60,10 +60,11 @@ const AdminDashboard: React.FC = () => {
           apiClient.admin.getStats(token),
           apiClient.admin.getReports ? apiClient.admin.getReports(1, 50, undefined, undefined, token) : Promise.resolve({ ok: true, json: async () => ({ data: [] }) })
         ]);
-
+        
         if (usersRes.ok) {
           const usersData = await usersRes.json();
           setUsers(usersData.data || []);
+          console.log("USER_data--->>>",usersData)
         } else {
           throw new Error('Failed to load users');
         }
@@ -389,11 +390,11 @@ const AdminDashboard: React.FC = () => {
                     <h3 className="font-medium text-gray-900 mb-2">Recent Activity</h3>
                     <div className="space-y-2">
                       <div className="flex justify-between">
-                        <span>Messages (30 days)</span>
+                        <span>Messages (30 days): </span>
                         <span>{stats.messages?.recent30Days || 0}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span>Total Snippets</span>
+                        <span>Total Snippets: </span>
                         <span>{stats.snippets?.total || 0}</span>
                       </div>
                     </div>

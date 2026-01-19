@@ -14,7 +14,7 @@ import ChatMessage from "./models/ChatMessage.js";
 import AdminLog from "./models/AdminLog.js";
 import { checkSessionAccess } from "./services/sessionAccessService.js";
 import { isRateLimited } from "./utils/rateLimiter.js";
-import { addUserToSession, removeUserFromSession, getActiveUsersInSession, removeUserFromAllSessions, getUserSessions } from "./utils/presenceTracker.js";
+import { addUserToSession, removeUserFromSession, getActiveUsersInSession, removeUserFromAllSessions, getUserSessions, updateUserActivity } from "./utils/presenceTracker.js";
 
 dotenv.config();
 
@@ -125,10 +125,21 @@ io.on('connection', (socket) => {
     // Log successful join
     console.log(`User ${userId} joined room ${sessionKey}`);
 
-    // Add user to presence tracker
+    // Fetch user details to include in presence tracker
+    const userDetail = await User.findOne({ clerkId: userId }).select('username email firstName lastName avatar');
+
+    // Add user to presence tracker with detailed user info
     addUserToSession(sessionKey, userId, {
       socketId: socket.id,
-      joinedAt: new Date()
+      joinedAt: new Date(),
+      username: userDetail?.username || userId,
+      email: userDetail?.email || '',
+      firstName: userDetail?.firstName || '',
+      lastName: userDetail?.lastName || '',
+      avatar: userDetail?.avatar || '',
+      fullName: userDetail?.firstName && userDetail?.lastName
+        ? `${userDetail.firstName} ${userDetail.lastName}`
+        : userDetail?.username || userId
     });
 
     // Notify others in the room
@@ -150,11 +161,10 @@ io.on('connection', (socket) => {
 
     // Notify admins about the new session activity
     const sessionInfo = await Session.findOne({ sessionKey: sessionKey }).select('title language isActive createdAt');
-    const userInfo = await User.findOne({ clerkId: userId }).select('username email firstName lastName');
 
     io.to('admin-room').emit('admin-notification', {
       type: 'session-join',
-      message: `User ${userInfo?.username || userId} joined session "${sessionInfo?.title || sessionKey}"`,
+      message: `User ${userDetail?.username || userId} joined session "${sessionInfo?.title || sessionKey}"`,
       timestamp: new Date(),
       userId,
       sessionKey,
@@ -206,10 +216,21 @@ io.on('connection', (socket) => {
     // Log successful join
     console.log(`User ${userId} joined room ${sessionKey} via access code ${accessCode}`);
 
-    // Add user to presence tracker
+    // Fetch user details to include in presence tracker
+    const userDetail = await User.findOne({ clerkId: userId }).select('username email firstName lastName avatar');
+
+    // Add user to presence tracker with detailed user info
     addUserToSession(sessionKey, userId, {
       socketId: socket.id,
-      joinedAt: new Date()
+      joinedAt: new Date(),
+      username: userDetail?.username || userId,
+      email: userDetail?.email || '',
+      firstName: userDetail?.firstName || '',
+      lastName: userDetail?.lastName || '',
+      avatar: userDetail?.avatar || '',
+      fullName: userDetail?.firstName && userDetail?.lastName
+        ? `${userDetail.firstName} ${userDetail.lastName}`
+        : userDetail?.username || userId
     });
 
     // Notify others in the room
@@ -231,11 +252,10 @@ io.on('connection', (socket) => {
 
     // Notify admins about the new session activity via access code
     const sessionInfo = await Session.findOne({ sessionKey: sessionKey }).select('title language isActive createdAt');
-    const userInfo = await User.findOne({ clerkId: userId }).select('username email firstName lastName');
 
     io.to('admin-room').emit('admin-notification', {
       type: 'session-join-via-code',
-      message: `User ${userInfo?.username || userId} joined session "${sessionInfo?.title || sessionKey}" via access code`,
+      message: `User ${userDetail?.username || userId} joined session "${sessionInfo?.title || sessionKey}" via access code`,
       timestamp: new Date(),
       userId,
       sessionKey,
@@ -308,13 +328,16 @@ io.on('connection', (socket) => {
       });
        console.log("CODE-->>>>",code)
 
+      // Update user's last activity in the session
+      updateUserActivity(sessionKey, userId);
+
       // Notify admins about the code change
       const sessionInfo = await Session.findOne({ sessionKey: sessionKey }).select('title');
-      const userInfo = await User.findOne({ clerkId: userId }).select('username email firstName lastName');
+      const userDetail = await User.findOne({ clerkId: userId }).select('username email firstName lastName');
 
       io.to('admin-room').emit('admin-notification', {
         type: 'code-change',
-        message: `User ${userInfo?.username || userId} updated code in session "${sessionInfo?.title || sessionKey}"`,
+        message: `User ${userDetail?.username || userId} updated code in session "${sessionInfo?.title || sessionKey}"`,
         timestamp: new Date(),
         userId,
         sessionKey,
@@ -356,13 +379,16 @@ io.on('connection', (socket) => {
         timestamp: new Date()
       });
 
+      // Update user's last activity in the session
+      updateUserActivity(sessionKey, userId);
+
       // Notify admins about the language change
       const sessionInfo = await Session.findOne({ sessionKey: sessionKey }).select('title');
-      const userInfo = await User.findOne({ clerkId: userId }).select('username email firstName lastName');
+      const userDetail = await User.findOne({ clerkId: userId }).select('username email firstName lastName');
 
       io.to('admin-room').emit('admin-notification', {
         type: 'language-change',
-        message: `User ${userInfo?.username || userId} changed language to ${language} in session "${sessionInfo?.title || sessionKey}"`,
+        message: `User ${userDetail?.username || userId} changed language to ${language} in session "${sessionInfo?.title || sessionKey}"`,
         timestamp: new Date(),
         userId,
         sessionKey,
@@ -451,13 +477,16 @@ io.on('connection', (socket) => {
         messageId: chatMessage._id
       });
 
+      // Update user's last activity in the session
+      updateUserActivity(sessionKey, userId);
+
       // Notify admins about the chat message
       const sessionInfo = await Session.findOne({ sessionKey: sessionKey }).select('title');
-      const userInfo = await User.findOne({ clerkId: userId }).select('username email firstName lastName');
+      const userDetail = await User.findOne({ clerkId: userId }).select('username email firstName lastName');
 
       io.to('admin-room').emit('admin-notification', {
         type: 'chat-message',
-        message: `User ${userInfo?.username || userId} sent a message in session "${sessionInfo?.title || sessionKey}": "${message.substring(0, 50)}${message.length > 50 ? '...' : ''}"`,
+        message: `User ${userDetail?.username || userId} sent a message in session "${sessionInfo?.title || sessionKey}": "${message.substring(0, 50)}${message.length > 50 ? '...' : ''}"`,
         timestamp: new Date(),
         userId,
         sessionKey,

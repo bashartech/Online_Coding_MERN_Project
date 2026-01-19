@@ -23,8 +23,8 @@ const appAuth = async (req, res, next) => {
     const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback_secret_key_for_dev', {
       clockTimestamp: Date.now() / 1000, // Use current time for validation
       clockTolerance: 30 // Allow 30 seconds of clock skew (increased for development)
-    });
-
+     });
+  
     // Find user by ID from token
     const user = await User.findById(decoded.userId).select('-password');
 

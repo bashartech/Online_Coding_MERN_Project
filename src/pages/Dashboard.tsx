@@ -156,7 +156,7 @@ const Dashboard: React.FC = () => {
               <div className="flex items-center space-x-2">
                 {authUser?.avatar && (
                   <img
-                    src={authUser.avatar}
+                    src=""
                     alt="Avatar"
                     className="w-8 h-8 rounded-full"
                   />
@@ -170,6 +170,12 @@ const Dashboard: React.FC = () => {
                   </span>
                 )}
               </div>
+              <button
+                onClick={() => navigate('/profile')}
+                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700"
+              >
+                Profile
+              </button>
               {authUser?.role === 'admin' && (
                 <button
                   onClick={() => navigate('/admin')}

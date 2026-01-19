@@ -465,6 +465,12 @@ const SessionEditorWrapper: React.FC = () => {
               <h1 className="text-xl font-semibold text-gray-900">Code Editor</h1>
             </div>
             <div className="flex items-center space-x-4">
+              <button
+                onClick={() => navigate('/profile')}
+                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700"
+              >
+                Profile
+              </button>
               {authUser && authUser.role === 'admin' && (
                 <button
                   onClick={() => navigate('/admin')}

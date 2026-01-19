@@ -110,11 +110,14 @@ const UserManagement: React.FC<UserManagementProps> = ({
                     <div className="flex items-center">
                       <div className="flex-shrink-0 h-10 w-10">
                         {user.avatar ? (
-                          <img className="h-10 w-10 rounded-full" src={user.avatar} alt="" />
+                          <img className="h-10 w-10 rounded-full" 
+                          src=""
+                          // {user.avatar}
+                           alt="" />
                         ) : (
                           <div className="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">
                             <span className="text-gray-600">
-                              {user.firstName?.charAt(0) || user.lastName?.charAt(0) || '?'}
+                              {user.firstName?.charAt(0) || user.lastName?.charAt(0) || ''}
                             </span>
                           </div>
                         )}

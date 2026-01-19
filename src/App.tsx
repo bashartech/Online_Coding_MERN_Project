@@ -5,6 +5,7 @@ import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import Dashboard from "./pages/Dashboard";
+import Profile from "./pages/Profile";
 import SessionEditor from "./pages/session/[sessionId]";
 import JoinSessionPage from "./pages/JoinSessionPage";
 import AdminDashboard from "./pages/AdminDashboard";
@@ -46,6 +47,11 @@ const AppContent: React.FC = () => {
       <Route path="/dashboard" element={
         <ProtectedRoute>
           <Dashboard />
+        </ProtectedRoute>
+      } />
+      <Route path="/profile" element={
+        <ProtectedRoute>
+          <Profile />
         </ProtectedRoute>
       } />
       <Route path="/session/:sessionId" element={
