@@ -95,8 +95,29 @@ const Profile: React.FC = () => {
 
   if (authLoading || loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-xl">Loading profile...</div>
+      <div className="min-h-screen bg-gradient-to-b from-[#0B0F14] via-[#0D1117] to-[#0B0F14] text-white overflow-hidden">
+        {/* Header */}
+        <header className="bg-gray-900 shadow-md h-14 flex items-center px-4 sm:px-6 md:px-8 justify-between">
+          <h1 className="text-base sm:text-lg font-semibold text-white">Profile</h1>
+          <div className="flex items-center space-x-2 sm:space-x-3">
+            <button onClick={() => navigate('/dashboard')} className="px-2 sm:px-3 py-1 text-xs sm:text-sm font-medium text-white bg-gray-700 rounded-md hover:bg-gray-600 transition">
+              Dashboard
+            </button>
+          </div>
+        </header>
+
+        <div className="flex justify-center items-center min-h-[calc(100vh-56px)]">
+          <div className="flex flex-col items-center">
+            <div className="relative w-16 h-16 mb-4">
+              <div className="absolute inset-0 rounded-full bg-gradient-to-br from-blue-500 to-cyan-500 animate-pulse"></div>
+              <div className="absolute inset-2 rounded-full bg-[#0B0F14] flex items-center justify-center">
+                <div className="w-6 h-6 rounded-full bg-gradient-to-br from-blue-500 to-cyan-500 animate-spin"></div>
+              </div>
+            </div>
+            <div className="text-lg font-medium text-gray-300">Loading your profile</div>
+            <div className="mt-2 text-sm text-gray-500">Retrieving your personal information...</div>
+          </div>
+        </div>
       </div>
     );
   }

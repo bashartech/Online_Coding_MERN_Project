@@ -428,9 +428,97 @@ const SessionEditorWrapper: React.FC = () => {
       setGeneratingLink(false);
     }
   };
-if (loading) return <div className="flex justify-center items-center min-h-screen text-xl">Loading session...</div>;
-  if (error) return <div className="flex justify-center items-center min-h-screen text-xl text-red-500">{error}</div>;
-  if (!session) return <div className="flex justify-center items-center min-h-screen text-xl">Session not found</div>;
+if (loading) {
+    return (
+      <div className="min-h-screen flex flex-col bg-black text-gray-100">
+        {/* Header */}
+        <header className="bg-gray-900 shadow-md h-14 flex items-center px-4 sm:px-6 md:px-8 justify-between">
+          <h1 className="text-base sm:text-lg font-semibold text-white">Code Editor</h1>
+          <div className="flex items-center space-x-2 sm:space-x-3">
+            <button className="px-2 sm:px-3 py-1 text-xs sm:text-sm font-medium text-white bg-gray-700 rounded-md" disabled>
+              Dashboard
+            </button>
+          </div>
+        </header>
+
+        {/* Loading State */}
+        <div className="flex-1 flex items-center justify-center">
+          <div className="flex flex-col items-center">
+            <div className="relative w-20 h-20 mb-6">
+              <div className="absolute inset-0 rounded-full bg-gradient-to-br from-blue-500 to-cyan-500 animate-pulse"></div>
+              <div className="absolute inset-2 rounded-full bg-gray-900 flex items-center justify-center">
+                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-cyan-500 animate-spin"></div>
+              </div>
+            </div>
+            <div className="text-xl font-medium text-white mb-2">Loading Session</div>
+            <div className="text-gray-400">Connecting to the coding environment...</div>
+            <div className="mt-4 w-48 h-2 bg-gray-800 rounded-full overflow-hidden">
+              <div className="h-full bg-gradient-to-r from-blue-500 to-cyan-500 animate-pulse rounded-full"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+  if (error) {
+    return (
+      <div className="min-h-screen flex flex-col bg-black text-gray-100">
+        {/* Header */}
+        <header className="bg-gray-900 shadow-md h-14 flex items-center px-4 sm:px-6 md:px-8 justify-between">
+          <h1 className="text-base sm:text-lg font-semibold text-white">Code Editor</h1>
+          <div className="flex items-center space-x-2 sm:space-x-3">
+            <button onClick={() => navigate('/dashboard')} className="px-2 sm:px-3 py-1 text-xs sm:text-sm font-medium text-white bg-gray-700 rounded-md hover:bg-gray-600 transition">
+              Dashboard
+            </button>
+          </div>
+        </header>
+
+        {/* Error State */}
+        <div className="flex-1 flex items-center justify-center">
+          <div className="flex flex-col items-center text-center">
+            <div className="text-2xl font-bold text-red-500 mb-4">Error Loading Session</div>
+            <div className="text-gray-400 mb-2">Something went wrong while loading the session:</div>
+            <div className="text-red-400 mb-6 text-center break-words max-w-md">{error}</div>
+            <button
+              onClick={() => navigate('/dashboard')}
+              className="px-6 py-3 bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white rounded-md transition"
+            >
+              Go to Dashboard
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+  if (!session) {
+    return (
+      <div className="min-h-screen flex flex-col bg-black text-gray-100">
+        {/* Header */}
+        <header className="bg-gray-900 shadow-md h-14 flex items-center px-4 sm:px-6 md:px-8 justify-between">
+          <h1 className="text-base sm:text-lg font-semibold text-white">Code Editor</h1>
+          <div className="flex items-center space-x-2 sm:space-x-3">
+            <button onClick={() => navigate('/dashboard')} className="px-2 sm:px-3 py-1 text-xs sm:text-sm font-medium text-white bg-gray-700 rounded-md hover:bg-gray-600 transition">
+              Dashboard
+            </button>
+          </div>
+        </header>
+
+        {/* Session Not Found State */}
+        <div className="flex-1 flex items-center justify-center">
+          <div className="flex flex-col items-center text-center">
+            <div className="text-2xl font-bold text-red-500 mb-4">Session Not Found</div>
+            <div className="text-gray-400 mb-6">The session you're looking for doesn't exist or may have expired.</div>
+            <button
+              onClick={() => navigate('/dashboard')}
+              className="px-6 py-3 bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white rounded-md transition"
+            >
+              Go to Dashboard
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
 
 

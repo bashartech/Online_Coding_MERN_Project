@@ -30,8 +30,8 @@ const Home: React.FC = () => {
           </div>
           <div className="hidden md:flex items-center gap-8">
             <a href="#features" className="text-sm text-gray-300 hover:text-white transition">Features</a>
-            <a href="#" className="text-sm text-gray-300 hover:text-white transition">Pricing</a>
-            <a href="#" className="text-sm text-gray-300 hover:text-white transition">Docs</a>
+            <a href="/profile" className="text-sm text-gray-300 hover:text-white transition">Profile</a>
+            <a href="#hit" className="text-sm text-gray-300 hover:text-white transition">How It Works</a>
           </div>
           <div className="flex items-center gap-3">
             <Link to="/login">
@@ -175,7 +175,7 @@ const Home: React.FC = () => {
       </section>
 
       {/* How It Works */}
-      <section className="py-24 px-6 border-t border-gray-800 bg-gradient-to-b from-transparent to-blue-500/5">
+      <section id="hit" className="py-24 px-6 border-t border-gray-800 bg-gradient-to-b from-transparent to-blue-500/5">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-4xl md:text-5xl font-bold mb-4">How It Works</h2>

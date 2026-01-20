@@ -119,8 +119,17 @@ const Dashboard: React.FC = () => {
   // Wait for both Clerk and our auth context to be fully loaded
   if (!isClerkLoaded || !isClerkUserLoaded || loading) {
     return (
-      <div className="flex justify-center items-center min-h-screen">
-        <div className="text-xl">Loading...</div>
+      <div className="flex justify-center items-center min-h-screen bg-gray-100">
+        <div className="flex flex-col items-center">
+          <div className="relative w-16 h-16 mb-4">
+            <div className="absolute inset-0 rounded-full bg-gradient-to-br from-blue-500 to-cyan-500 animate-pulse"></div>
+            <div className="absolute inset-2 rounded-full bg-white flex items-center justify-center">
+              <div className="w-6 h-6 rounded-full bg-gradient-to-br from-blue-500 to-cyan-500 animate-spin"></div>
+            </div>
+          </div>
+          <div className="text-lg font-medium text-gray-700">Loading Dashboard</div>
+          <div className="mt-2 text-sm text-gray-500">Preparing your workspace...</div>
+        </div>
       </div>
     );
   }
