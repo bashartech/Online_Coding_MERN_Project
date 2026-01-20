@@ -43,7 +43,9 @@ const sessionSchema = new mongoose.Schema(
       required: true
     },
     accessCode: {
-      type: String
+      type: String,
+      unique: true, // Ensure access codes are unique
+      sparse: true  // Allow null values for existing sessions without access codes
     },
     code: {
       type: String,
@@ -58,5 +60,7 @@ const sessionSchema = new mongoose.Schema(
 sessionSchema.index({ sessionKey: 1 });
 sessionSchema.index({ ownerId: 1 });
 sessionSchema.index({ isActive: 1 });
+sessionSchema.index({ accessCode: 1 }); // Index for access code lookups
+sessionSchema.index({ createdAt: -1, isActive: 1 }); // For fast session queries as specified in Step 8
 
 export default mongoose.model("Session", sessionSchema);

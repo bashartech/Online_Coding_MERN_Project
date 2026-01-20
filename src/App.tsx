@@ -1,11 +1,16 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import './App.css';
+import './index.css'
 import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import Dashboard from "./pages/Dashboard";
+import Profile from "./pages/Profile";
 import SessionEditor from "./pages/session/[sessionId]";
+import JoinSessionPage from "./pages/JoinSessionPage";
+import AdminDashboard from "./pages/AdminDashboard";
+import AdminProtectedRoute from "./components/AdminProtectedRoute";
 
 // Protected Route Component
 interface ProtectedRouteProps {
@@ -13,7 +18,7 @@ interface ProtectedRouteProps {
 }
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
-  const { isAuthenticated, loading, isClerkLoaded, isClerkSignedIn, hasBackendSyncFailed, isBackendSyncInProgress } = useAuth();
+  const {  loading, isClerkLoaded, isClerkSignedIn, hasBackendSyncFailed } = useAuth();
 
   if (!isClerkLoaded || loading) {
     return <div>Loading...</div>; // Or a spinner component
@@ -29,7 +34,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
 
 // Wrapper component to access auth context
 const AppContent: React.FC = () => {
-  const { isClerkLoaded, isClerkSignedIn, loading } = useAuth();
+  const { isClerkLoaded,  loading } = useAuth();
 
   if (!isClerkLoaded || loading) {
     return <div>Loading...</div>; // Or a spinner component
@@ -45,10 +50,21 @@ const AppContent: React.FC = () => {
           <Dashboard />
         </ProtectedRoute>
       } />
+      <Route path="/profile" element={
+        <ProtectedRoute>
+          <Profile />
+        </ProtectedRoute>
+      } />
       <Route path="/session/:sessionId" element={
         <ProtectedRoute>
           <SessionEditor />
         </ProtectedRoute>
+      } />
+      <Route path="/session/join/:accessCode" element={<JoinSessionPage />} />
+      <Route path="/admin" element={
+        <AdminProtectedRoute>
+          <AdminDashboard />
+        </AdminProtectedRoute>
       } />
     </Routes>
   );

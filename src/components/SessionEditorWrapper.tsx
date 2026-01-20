@@ -1,11 +1,35 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useSession, useUser } from '@clerk/clerk-react';
+import { useAuth } from '../contexts/AuthContext';
 import CodeEditor from './codeEditor';
+import PresenceIndicator from './PresenceIndicator';
 import apiClient from '../utils/api';
+import {
+  initSocket,
+  joinSession,
+  sendCodeChange,
+  disconnectSocket,
+  onCodeUpdate,
+  onError,
+  onConnect,
+  onDisconnect,
+  onConnectError,
+  onPresenceUpdate,
+  onPresenceList,
+  onUserJoined,
+  onUserLeft,
+  sendMessage,
+  onReceiveMessage,
+  onLanguageUpdate,
+  sendLanguageChange
+} from '../services/socketService';
+import ChatPanel from './ChatPanel';
+import ShareSessionModal from './ShareSessionModal';
 
 interface Session {
   sessionId: string;
+  sessionKey: string;
   title: string;
   code: string;
   language: string;
@@ -17,11 +41,162 @@ const SessionEditorWrapper: React.FC = () => {
   const { sessionId } = useParams<{ sessionId: string }>();
   const navigate = useNavigate();
   const { session: clerkSession } = useSession();
-  const { isSignedIn } = useUser();
+  const { isSignedIn, user } = useUser(); // Get user info for socket connection
+  const { user: authUser } = useAuth(); // Get our app's user data with role
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState<boolean>(false);
+  const [isSocketConnected, setIsSocketConnected] = useState<boolean>(false);
+  const [socketConnectionError, setSocketConnectionError] = useState<string | null>(null);
+  const [activeUsers, setActiveUsers] = useState<any[]>([]);
+  const [messages, setMessages] = useState<any[]>([]);
+  const [showShareModal, setShowShareModal] = useState<boolean>(false);
+  const [generatingLink, setGeneratingLink] = useState<boolean>(false);
+  const socketInitialized = useRef<boolean>(false);
+
+  // Initialize socket infrastructure once when component mounts
+  useEffect(() => {
+    // Initialize socket connection
+    initSocket(import.meta.env.VITE_BACKEND_URL);
+
+    // Listen for code updates from other users
+    onCodeUpdate((data) => {
+      console.log('Received code-update:', data, 'Current session:', session?.sessionKey, 'Session available:', !!session);
+      // Update whenever we receive a valid update (server already excludes sender)
+      // We don't check if session exists here because we want to update when it becomes available
+      console.log('Processing code update');
+      setSession(prev => {
+        if (!prev) {
+          console.log('No session available to update');
+          return null;
+        }
+        console.log('Setting new code:', data.code.substring(0, 50));
+        return {
+          ...prev,
+          code: data.code,
+          language: data.language
+        };
+      });
+    });
+
+
+    // Listen for socket errors
+    onError((error) => {
+      console.error('Socket error:', error);
+      setSocketConnectionError(error.error || 'Socket connection error');
+      setError(error.error || 'Socket connection error');
+    });
+
+    // Listen for connection events
+    onConnect(() => {
+      console.log('Socket reconnected');
+      setIsSocketConnected(true);
+      setSocketConnectionError(null);
+
+      // Rejoin session after reconnection if session and user are available
+      if (session && user) {
+        const sessionKey = session.sessionKey; // Use the sessionKey from the session data
+        joinSession(sessionKey, user.id, (error) => {
+          if (error) {
+            console.error('Error rejoining session:', error);
+            setSocketConnectionError(error.error || 'Failed to rejoin session');
+          } else {
+            setSocketConnectionError(null);
+          }
+        });
+      }
+    });
+
+    onDisconnect((reason) => {
+      console.log('Socket disconnected:', reason);
+      setIsSocketConnected(false);
+      setSocketConnectionError('Disconnected from server');
+    });
+
+    onConnectError((error) => {
+      console.error('Socket connection error:', error);
+      setSocketConnectionError('Connection error occurred');
+    });
+
+    // Listen for presence updates
+    onPresenceList((data) => {
+      setActiveUsers(data.users);
+    });
+
+    onPresenceUpdate((data) => {
+      setActiveUsers(data.users);
+    });
+
+    onUserJoined((data) => {
+      console.log('User joined:', data);
+      // The presence update will come through onPresenceUpdate
+    });
+
+    onUserLeft((data) => {
+      console.log('User left:', data);
+      // The presence update will come through onPresenceUpdate
+    });
+
+    // Listen for chat messages from all users (including self for immediate feedback)
+    onReceiveMessage((data) => {
+      console.log('Received chat message:', data);
+      setMessages(prev => {
+        // Check if this message is already in the state to prevent duplicates
+        const messageExists = prev.some(msg => msg.messageId === data.messageId);
+        if (!messageExists) {
+          return [...prev, data];
+        }
+        return prev;
+      });
+    });
+
+    // Listen for language updates from other users (when they change language without changing code)
+    onLanguageUpdate((data) => {
+      console.log('Received language-update:', data);
+      // Update the session language when another user changes it
+      setSession(prev => {
+        if (!prev || prev.sessionId !== session?.sessionId) {
+          return prev;
+        }
+        return {
+          ...prev,
+          language: data.language
+        };
+      });
+    });
+
+    socketInitialized.current = true;
+
+    // Clean up on component unmount
+    return () => {
+      if (socketInitialized.current) {
+        disconnectSocket();
+        socketInitialized.current = false;
+        setIsSocketConnected(false);
+      }
+    };
+  }, []); // Empty dependency array - only run once on mount
+
+  // Join session when session and user are available
+  useEffect(() => {
+    if (session && user && socketInitialized.current) {
+      // Join the session using sessionKey for socket operations
+      const sessionKey = session.sessionKey; // Use the sessionKey from the session data
+
+      joinSession(sessionKey, user.id, (error) => {
+        if (error) {
+          console.error('Error joining session:', error);
+          setSocketConnectionError(error.error || 'Failed to join session');
+          setError(error.error || 'Failed to join session');
+        } else {
+          setIsSocketConnected(true);
+          setSocketConnectionError(null);
+          console.log('Successfully joined session:', sessionKey);
+        }
+      });
+    }
+  }, [session, user]); // Only run when session or user changes
 
   // Load session data on component mount
   useEffect(() => {
@@ -77,7 +252,7 @@ const SessionEditorWrapper: React.FC = () => {
     if (sessionId) {
       loadSession();
     }
-  }, [sessionId, navigate]);
+  }, [sessionId, navigate, clerkSession, isSignedIn]);
 
   // Handle saving the code
   const handleSave = useCallback(async () => {
@@ -159,15 +334,52 @@ const SessionEditorWrapper: React.FC = () => {
   }, [session, navigate]);
 
   // Handle code changes from the editor
-  const handleCodeChange = useCallback((newValue: string | undefined, language: string, fileName: string) => {
-    if (session) {
-      setSession(prev => prev ? {
-        ...prev,
-        code: newValue || '',
-        language: language
-      } : null);
+  const handleCodeChange = useCallback((newValue: string | undefined, language: string) => {
+    if (session && user) {
+      try {
+        // Update local state
+        setSession(prev => prev ? {
+          ...prev,
+          code: newValue || '',
+          language: language
+        } : null);
+
+        // Update local state first
+        setSession(prev => {
+          if (!prev) return null;
+
+          // Determine if code or language changed
+          const codeChanged = prev.code !== (newValue || '');
+          const languageChanged = prev.language !== language;
+
+          // Send appropriate update to other users
+          if (isSocketConnected) {
+            console.log('Sending update to session:', prev.sessionKey, 'Code changed:', codeChanged, 'Language changed:', languageChanged, 'Code excerpt:', newValue?.substring(0, 50), 'Language:', language);
+
+            if (codeChanged) {
+              // Send code change which includes language
+              sendCodeChange(prev.sessionKey, newValue || '', user.id, language);
+            } else if (languageChanged) {
+              // Only language changed, send language change event
+              sendLanguageChange(prev.sessionKey, user.id, language);
+            } else if (!codeChanged && !languageChanged) {
+              // No changes, but still update if needed for synchronization
+              sendCodeChange(prev.sessionKey, newValue || '', user.id, language);
+            }
+          }
+
+          // Return updated session
+          return {
+            ...prev,
+            code: newValue || '',
+            language: language
+          };
+        });
+      } catch (error) {
+        console.error('Error in handleCodeChange:', error);
+      }
     }
-  }, [session]);
+  }, [session, user, isSocketConnected]);
 
   // Handle title change
   const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -179,86 +391,163 @@ const SessionEditorWrapper: React.FC = () => {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center min-h-screen">
-        <div className="text-xl">Loading session...</div>
+  // Handle sending a chat message
+  const handleSendMessage = (message: string) => {
+    if (session && user && isSocketConnected) {
+      sendMessage(session.sessionKey, user.id, message);
+    }
+  };
+
+  // Handle generating a share link
+  const handleGenerateLink = async (): Promise<string> => {
+    if (!session || !user) {
+      throw new Error('Session or user not available');
+    }
+
+    setGeneratingLink(true);
+    try {
+      // Get the Clerk authentication token
+      const token = clerkSession ? await clerkSession.getToken() : null;
+
+      const response = await apiClient.post(
+        `/api/sessions/${session.sessionId}/generate-access-code`,
+        {},
+        token || undefined
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        return data.accessCode;
+      } else {
+        throw new Error('Failed to generate access code');
+      }
+    } catch (error) {
+      console.error('Error generating access code:', error);
+      throw error;
+    } finally {
+      setGeneratingLink(false);
+    }
+  };
+if (loading) return <div className="flex justify-center items-center min-h-screen text-xl">Loading session...</div>;
+  if (error) return <div className="flex justify-center items-center min-h-screen text-xl text-red-500">{error}</div>;
+  if (!session) return <div className="flex justify-center items-center min-h-screen text-xl">Session not found</div>;
+
+
+
+
+ return (
+  <div className="min-h-screen flex flex-col bg-black text-gray-100">
+    {/* Header */}
+    <header className="bg-gray-900 shadow-md h-14 flex items-center px-4 sm:px-6 md:px-8 justify-between">
+      <h1 className="text-base sm:text-lg font-semibold text-white">Code Editor</h1>
+      <div className="flex items-center space-x-2 sm:space-x-3">
+        <button onClick={() => navigate('/profile')} className="px-2 sm:px-3 py-1 text-xs sm:text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition">Profile</button>
+        {authUser?.role === 'admin' && <button onClick={() => navigate('/admin')} className="px-2 sm:px-3 py-1 text-xs sm:text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700 transition">Admin</button>}
+        <button onClick={() => navigate('/dashboard')} className="px-2 sm:px-3 py-1 text-xs sm:text-sm font-medium text-white bg-gray-700 rounded-md hover:bg-gray-600 transition">Dashboard</button>
       </div>
-    );
-  }
+    </header>
 
-  if (error) {
-    return (
-      <div className="flex justify-center items-center min-h-screen">
-        <div className="text-xl text-red-500">{error}</div>
+    {/* Session Details */}
+    <div className="bg-gray-850 border-b border-gray-800 px-4 sm:px-6 py-2 flex flex-col md:flex-row md:items-center justify-between gap-2 md:gap-3">
+      {/* Title */}
+      <input
+        type="text"
+        value={session.title}
+        onChange={handleTitleChange}
+        placeholder="Session Title..."
+        className="flex-1 max-w-full md:max-w-md text-base sm:text-lg font-semibold text-white bg-gray-800 px-2 sm:px-3 py-1 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-400"
+      />
+
+      {/* Status and Actions */}
+      <div className="flex flex-wrap items-center gap-2 md:gap-3">
+        {user && (
+          <PresenceIndicator
+            sessionKey={session.sessionKey}
+            currentUserId={user.id}
+            onPresenceUpdate={setActiveUsers}
+          />
+        )}
+
+        {/* Socket Status */}
+        <div className="flex items-center space-x-1 text-xs sm:text-sm">
+          <div
+            className={`w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full ${isSocketConnected ? 'bg-green-500' : 'bg-red-500'}`}
+            title={isSocketConnected ? 'Connected' : 'Disconnected'}
+          ></div>
+          <span className={`${isSocketConnected ? 'text-green-400' : 'text-red-400'}`}>
+            {isSocketConnected ? 'Connected' : 'Connecting...'}
+          </span>
+        </div>
+
+        {/* Error */}
+        {socketConnectionError && <div className="text-xs sm:text-sm text-red-500 ml-1" title={socketConnectionError}>⚠️</div>}
+
+        {/* Share */}
+        <button
+          onClick={() => setShowShareModal(true)}
+          className="px-2 sm:px-3 py-1 text-xs sm:text-sm font-medium text-white bg-purple-600 rounded-md hover:bg-purple-700 transition"
+        >
+          Share
+        </button>
+
+        {/* Save */}
+        <button
+          onClick={handleSave}
+          disabled={saving}
+          className={`px-2 sm:px-3 py-1 text-xs sm:text-sm font-medium text-white rounded-md transition-transform transform hover:scale-105 ${
+            saving ? 'bg-gray-500 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'
+          }`}
+        >
+          {saving ? 'Saving...' : 'Save'}
+        </button>
       </div>
-    );
-  }
-
-  if (!session) {
-    return (
-      <div className="flex justify-center items-center min-h-screen">
-        <div className="text-xl">Session not found</div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
-      <nav className="bg-white shadow">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16">
-            <div className="flex items-center">
-              <h1 className="text-xl font-semibold text-gray-900">Code Editor</h1>
-            </div>
-            <div className="flex items-center space-x-4">
-              <button
-                onClick={() => navigate('/dashboard')}
-                className="px-4 py-2 text-sm font-medium text-white bg-gray-600 rounded-md hover:bg-gray-700"
-              >
-                Back to Dashboard
-              </button>
-            </div>
-          </div>
-        </div>
-      </nav>
-
-      <main className="flex-1 flex flex-col max-w-7xl mx-auto py-0 sm:px-0 lg:px-0">
-        <div className="px-4 py-3 sm:px-0 border-b border-gray-200 bg-white">
-          <div className="flex justify-between items-center">
-            <input
-              type="text"
-              value={session.title}
-              onChange={handleTitleChange}
-              className="text-xl font-semibold text-gray-900 bg-transparent border-none outline-none flex-1"
-            />
-            <div className="flex items-center space-x-4 ml-4">
-              <button
-                onClick={handleSave}
-                disabled={saving}
-                className={`px-4 py-2 text-sm font-medium text-white rounded-md ${
-                  saving ? 'bg-gray-400' : 'bg-blue-600 hover:bg-blue-700'
-                }`}
-              >
-                {saving ? 'Saving...' : 'Save Code'}
-              </button>
-            </div>
-          </div>
-        </div>
-        <div className="flex-1 p-0">
-          <div className="h-[calc(100vh-150px)]">
-            <CodeEditor
-              initialCode={session.code}
-              initialLanguage={session.language}
-              onCodeChange={handleCodeChange}
-              height="100%"
-              theme="vs-dark"
-            />
-          </div>
-        </div>
-      </main>
     </div>
-  );
+
+    {/* Main Content: Chat 30% / Editor 70% */}
+    <div className="flex flex-1 flex-col md:flex-row overflow-hidden">
+      {/* Chat Panel */}
+      <div className="w-full md:w-[30%] bg-gray-900 border-b md:border-b-0 md:border-r border-gray-800 p-2 overflow-y-auto">
+        <ChatPanel
+          currentUser={user ? { id: user.id, firstName: user.firstName || undefined, lastName: user.lastName || undefined, avatar: user.imageUrl } : null}
+          sessionId={session.sessionKey}
+          onSendMessage={handleSendMessage}
+          messages={messages}
+          activeUsers={activeUsers}
+          isVisible={true}
+          onClose={() => {}}
+          onToggleChat={() => {}}
+          layoutMode="embedded"
+        />
+      </div>
+
+      {/* Code Editor */}
+      <div className="w-full md:w-[70%] bg-gray-950 flex flex-col border-l md:border-l-0 border-gray-800">
+        <CodeEditor
+          initialCode={session.code}
+          initialLanguage={session.language}
+          onCodeChange={handleCodeChange}
+          height="100%"
+          theme="vs-dark"
+          codeValue={session.code}
+          languageValue={session.language}
+        />
+      </div>
+    </div>
+
+    {/* Share Modal */}
+    <ShareSessionModal
+      isOpen={showShareModal}
+      onClose={() => setShowShareModal(false)}
+      sessionId={session.sessionId}
+      onGenerateLink={handleGenerateLink}
+      isLoading={generatingLink}
+    />
+  </div>
+);
+
+
+
+
 };
 
 export default SessionEditorWrapper;

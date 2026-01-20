@@ -1,9 +1,14 @@
 import express from 'express';
 import { saveSnippet, addCollaborator } from '../controllers/sessionController.js'; // Existing controller for other functions
+import { getSessionByAccessCode } from '../controllers/session.controller.js'; // Import access code controller
 import clerkAuth from '../middleware/auth.js'; // Use our standardized Clerk auth middleware
 import sessionRoutes from './session.routes.js'; // Our new modular session routes
+import adminRoutes from './admin.routes.js'; // Import admin routes
 
 const router = express.Router();
+
+// Use access code route specifically (no auth required for joining sessions)
+router.get('/sessions/access/:accessCode', getSessionByAccessCode);
 
 // Use our new session routes (handles POST, GET, PUT for /sessions)
 router.use('/sessions', sessionRoutes);
@@ -14,5 +19,8 @@ router.post('/snippets', clerkAuth, saveSnippet);
 
 // Add collaborator to session - protect with Clerk auth
 router.put('/sessions/:sessionId/collaborators', clerkAuth, addCollaborator);
+
+// Admin routes (protected with admin authentication)
+router.use('/admin', adminRoutes);
 
 export default router;

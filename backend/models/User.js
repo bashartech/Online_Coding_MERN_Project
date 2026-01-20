@@ -66,6 +66,9 @@ const userSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+// Add indexes for efficient queries
+userSchema.index({ role: 1 }); // For fast role-based queries
+
 // Method to update last login time
 userSchema.methods.updateLastLogin = function() {
   this.lastLoginAt = new Date();

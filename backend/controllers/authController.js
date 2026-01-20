@@ -1,6 +1,52 @@
 import jwt from 'jsonwebtoken';
-import { verifyToken as verifyClerkToken } from '@clerk/backend';
+import { verifyToken as verifyClerkToken, createClerkClient } from '@clerk/backend';
 import User from '../models/User.js';
+
+// Helper function to fetch user details from Clerk's API
+const fetchClerkUser = async (clerkId) => {
+  try {
+    // Create Clerk client instance
+    const clerkClient = createClerkClient({
+      secretKey: process.env.CLERK_SECRET_KEY,
+    });
+
+    // Get user from Clerk API
+    const userData = await clerkClient.users.getUser(clerkId);
+
+    // Log the full user object for debugging
+    console.log(`Successfully fetched user ${clerkId} from Clerk API`, {
+      userDataKeys: Object.keys(userData),
+      email_addresses: userData.email_addresses,
+      primary_email_address: userData.primary_email_address,
+      email_address: userData.email_address,
+      first_name: userData.first_name,
+      last_name: userData.last_name,
+      username: userData.username,
+      profile_image_url: userData.profile_image_url,
+      image_url: userData.image_url
+    });
+
+    return {
+      clerkId: userData.id,
+      // Try multiple possible email fields with correct Clerk API field names
+      email: (userData.primaryEmailAddressId ?
+              (userData.emailAddresses?.find(email => email.id === userData.primaryEmailAddressId)?.emailAddress) :
+              (userData.emailAddresses && userData.emailAddresses[0] ? userData.emailAddresses[0].emailAddress : '')) || '',
+      firstName: userData.firstName || '',
+      lastName: userData.lastName || '',
+      avatar: userData.imageUrl || '',
+      username: userData.username ||
+                (userData.emailAddresses && userData.emailAddresses[0] ?
+                  userData.emailAddresses[0].emailAddress?.split('@')[0] : '') ||
+                userData.id
+    };
+  } catch (error) {
+    console.error('Error fetching user from Clerk API:', error.message);
+    console.error('Stack trace:', error.stack);
+    console.error('Falling back to JWT claims for user:', clerkId);
+    return null;
+  }
+};
 
 // Get user profile or create if doesn't exist
 export const getUserProfile = async (req, res) => {
@@ -16,7 +62,7 @@ export const getUserProfile = async (req, res) => {
 
     const clerkToken = authHeader.substring(7); // Remove 'Bearer ' prefix
 
-    // Verify the Clerk token
+    // Verify the Clerk token to get basic claims
     let clerkClaims;
     try {
       clerkClaims = await verifyClerkToken(clerkToken, {
@@ -68,15 +114,15 @@ export const getUserProfile = async (req, res) => {
       }
     }
 
-    // Extract user data from Clerk claims
+    // Extract basic user data from Clerk claims first
     const {
       sub: clerkId,
-      email, // This might be undefined depending on the token
-      first_name: firstName,
-      last_name: lastName,
-      image_url: imageUrl,
-      username: clerkUsername,
-      email_addresses,
+      email: jwtEmail,
+      first_name: jwtFirstName,
+      last_name: jwtLastName,
+      image_url: jwtImageUrl,
+      username: jwtUsername,
+      email_addresses: jwtEmailAddresses,
       phone_numbers,
       external_accounts,
       web3_wallets,
@@ -87,28 +133,58 @@ export const getUserProfile = async (req, res) => {
       updated_at
     } = clerkClaims;
 
+    // Fetch complete user profile from Clerk API for more accurate information
+    const clerkUserProfile = await fetchClerkUser(clerkId);
+
+    // Use the more complete user profile from Clerk API if available, otherwise use JWT claims
+    const userProfile = clerkUserProfile || {
+      clerkId,
+      email: jwtEmail || (jwtEmailAddresses && jwtEmailAddresses[0] && jwtEmailAddresses[0].email_address) || '',
+      firstName: jwtFirstName || '',
+      lastName: jwtLastName || '',
+      avatar: jwtImageUrl || '',
+      username: jwtUsername || (jwtEmail ? jwtEmail.split('@')[0] : clerkId)
+    };
+
+    // Log the user profile source for debugging
+    if (clerkUserProfile) {
+      console.log(`Using Clerk API data for user ${clerkId}:`, {
+        email: userProfile.email,
+        firstName: userProfile.firstName,
+        lastName: userProfile.lastName,
+        username: userProfile.username,
+        clerkId: userProfile.clerkId
+      });
+    } else {
+      console.log(`Using JWT claims fallback for user ${clerkId}:`, {
+        email: userProfile.email,
+        firstName: userProfile.firstName,
+        lastName: userProfile.lastName,
+        username: userProfile.username,
+        clerkId: userProfile.clerkId
+      });
+    }
+
     // Check if user already exists in our database
     let user = await User.findOne({ clerkId });
 
     if (!user) {
       // Create new user if doesn't exist
       // Ensure username is not longer than 30 characters
-      let username = clerkUsername || email?.split('@')[0] || clerkId;
-      if (username.length > 30) {
+      let username = userProfile.username;
+      if (username && username.length > 30) {
         username = username.substring(0, 30);
       }
 
-      // Extract primary email from email addresses array
-      const primaryEmail = email_addresses?.[0]?.email_address || email || '';
       // Ensure email is not empty string if possible, use null instead of empty string to avoid unique constraint
-      const userEmail = primaryEmail.trim() || null;
+      const userEmail = userProfile.email ? userProfile.email.trim() || null : null;
 
       user = new User({
-        clerkId,
+        clerkId: userProfile.clerkId,
         email: userEmail,
-        firstName: firstName || '',
-        lastName: lastName || '',
-        avatar: imageUrl || '',
+        firstName: userProfile.firstName || '',
+        lastName: userProfile.lastName || '',
+        avatar: userProfile.avatar || '',
         username: username
       });
 
@@ -132,13 +208,19 @@ export const getUserProfile = async (req, res) => {
               // For email, we'll use a placeholder that makes it unique
               const uniqueEmail = userEmail ? userEmail : `${clerkId}@temp.placeholder`;
 
+              // Ensure username is not longer than 30 characters in fallback case
+              let fallbackUsername = userProfile.username;
+              if (fallbackUsername && fallbackUsername.length > 30) {
+                fallbackUsername = fallbackUsername.substring(0, 30);
+              }
+
               user = new User({
-                clerkId,
+                clerkId: userProfile.clerkId,
                 email: uniqueEmail,  // Use a unique placeholder if original email is null
-                firstName: firstName || '',
-                lastName: lastName || '',
-                avatar: imageUrl || '',
-                username: username
+                firstName: userProfile.firstName || '',
+                lastName: userProfile.lastName || '',
+                avatar: userProfile.avatar || '',
+                username: fallbackUsername
               });
 
               await user.save();
@@ -150,6 +232,25 @@ export const getUserProfile = async (req, res) => {
         }
       }
     } else {
+      // Update user information with fresh data from Clerk
+      user.firstName = userProfile.firstName || user.firstName;
+      user.lastName = userProfile.lastName || user.lastName;
+      user.avatar = userProfile.avatar || user.avatar;
+
+      // Ensure username is not longer than 30 characters when updating
+      let updatedUsername = userProfile.username;
+      if (updatedUsername && updatedUsername.length > 30) {
+        updatedUsername = updatedUsername.substring(0, 30);
+      }
+      user.username = updatedUsername;
+
+      // Update email only if it's not empty and different from current
+      if (userProfile.email && userProfile.email !== user.email) {
+        user.email = userProfile.email;
+      }
+
+      await user.save();
+
       // Update last login time for existing user
       await user.updateLastLogin();
     }
@@ -165,7 +266,7 @@ export const getUserProfile = async (req, res) => {
     res.status(200).json({
       success: true,
       token,
-      user: { 
+      user: {
         id: user._id,
         clerkId: user.clerkId,
         email: user.email,

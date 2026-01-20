@@ -20,13 +20,17 @@ const snippetSchema = new mongoose.Schema(
       default: "javascript",
       enum: ["javascript", "python", "java", "cpp", "c", "html", "css", "typescript", "go", "rust", "php", "ruby", "sql"]
     },
+    fileName: {
+      type: String,
+      default: "index.js",
+      required: true
+    },
     author: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
+      type: String,  // Store Clerk user ID as string instead of ObjectId
       required: true
     },
     sessionId: {
-      type: mongoose.Schema.Types.ObjectId,
+      type: String,  // Store session ID as string to match Session model
       ref: "Session"
     },
     isPublic: {
@@ -42,7 +46,7 @@ const snippetSchema = new mongoose.Schema(
       default: 0
     },
     likedBy: [{
-      type: mongoose.Schema.Types.ObjectId,
+      type: String,  // Store Clerk user IDs as strings
       ref: "User"
     }]
   },
@@ -52,8 +56,11 @@ const snippetSchema = new mongoose.Schema(
 // Index for faster querying
 snippetSchema.index({ author: 1 });
 snippetSchema.index({ sessionId: 1 });
+snippetSchema.index({ fileName: 1 });
+snippetSchema.index({ sessionId: 1, author: 1, fileName: 1 }); // Compound index for efficient querying
 snippetSchema.index({ language: 1 });
 snippetSchema.index({ isPublic: 1 });
 snippetSchema.index({ createdAt: -1 });
+snippetSchema.index({ sessionId: 1, createdAt: -1 }); // For fast snippet queries as specified in Step 8
 
 export default mongoose.model("Snippet", snippetSchema);

@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(.specify/scripts/bash/create-new-feature.sh --json \"read prompt.md for new feaure\" --number 1 --short-name \"realtime-collab\")"
+    ]
+  }
+}
