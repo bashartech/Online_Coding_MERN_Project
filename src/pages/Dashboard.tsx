@@ -305,29 +305,29 @@ const Dashboard: React.FC = () => {
 
     //   </div>
     // </div>
-  <div className="flex h-screen bg-gray-100">
+  <div className="flex h-screen bg-[#0B0F14] text-white">
     <Sidebar isOpen={sidebarOpen} toggleSidebar={toggleSidebar} />
 
     <div className="flex-1 flex flex-col overflow-hidden">
       {/* Top Navbar */}
-      <nav className="bg-white border-b">
+      <nav className="bg-[#0D1117] border-b border-gray-800">
         <div className="flex items-center justify-between px-6 h-16">
           <div className="flex items-center gap-3">
             <button
               onClick={toggleSidebar}
-              className="lg:hidden text-gray-600 hover:text-gray-900"
+              className="lg:hidden text-gray-300 hover:text-white"
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
               </svg>
             </button>
-            <h1 className="text-xl font-semibold text-gray-800">
+            <h1 className="text-xl font-semibold text-white">
               Dashboard
             </h1>
           </div>
 
           <div className="flex items-center gap-4">
-            <span className="text-sm text-gray-600">
+            <span className="text-sm text-gray-300">
               {authUser?.firstName || authUser?.username}
             </span>
             <button
@@ -355,11 +355,11 @@ const Dashboard: React.FC = () => {
         <div className="max-w-7xl mx-auto space-y-6">
 
           {/* Welcome Card */}
-          <div className="bg-white rounded-xl shadow p-6">
-            <h2 className="text-2xl font-bold text-gray-800 mb-2">
+          <div className="bg-[#0D1117] rounded-xl border border-gray-800 p-6">
+            <h2 className="text-2xl font-bold text-white mb-2">
               Welcome back 👋
             </h2>
-            <p className="text-gray-600">
+            <p className="text-gray-400">
               Manage your sessions and collaborate in real-time.
             </p>
           </div>
@@ -368,11 +368,11 @@ const Dashboard: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
 
             {/* User Info */}
-            <div className="bg-white rounded-xl shadow p-5">
-              <h3 className="font-semibold text-gray-800 mb-4">
+            <div className="bg-[#0D1117] rounded-xl border border-gray-800 p-5">
+              <h3 className="font-semibold text-white mb-4">
                 User Information
               </h3>
-              <ul className="text-sm text-gray-600 space-y-2">
+              <ul className="text-sm text-gray-400 space-y-2">
                 <li><strong>Username:</strong> {authUser?.username}</li>
                 <li><strong>Email:</strong> {authUser?.email}</li>
                 <li><strong>Role:</strong> {authUser?.role}</li>
@@ -381,24 +381,24 @@ const Dashboard: React.FC = () => {
             </div>
 
             {/* Quick Actions */}
-            <div className="bg-white rounded-xl shadow p-5">
-              <h3 className="font-semibold text-gray-800 mb-4">
+            <div className="bg-[#0D1117] rounded-xl border border-gray-800 p-5">
+              <h3 className="font-semibold text-white mb-4">
                 Quick Actions
               </h3>
               <div className="space-y-3">
                 <button
                   onClick={createNewSession}
-                  className="w-full py-2 rounded-md bg-blue-600 text-white hover:bg-blue-700"
+                  className="w-full py-2 rounded-md bg-gradient-to-r from-blue-500 to-cyan-500 text-white hover:from-blue-600 hover:to-cyan-600"
                 >
                   New Session
                 </button>
-                
+
               </div>
             </div>
 
             {/* Sessions */}
-            <div className="bg-white rounded-xl shadow p-5 md:col-span-2 lg:col-span-1">
-              <h3 className="font-semibold text-gray-800 mb-4">
+            <div className="bg-[#0D1117] rounded-xl border border-gray-800 p-5 md:col-span-2 lg:col-span-1">
+              <h3 className="font-semibold text-white mb-4">
                 Your Sessions
               </h3>
 
@@ -417,17 +417,17 @@ const Dashboard: React.FC = () => {
                   <div
                     key={s.sessionId}
                     onClick={() => navigate(`/session/${s.sessionId}`)}
-                    className="flex justify-between items-center p-3 border rounded-lg cursor-pointer hover:bg-gray-50"
+                    className="flex justify-between items-center p-3 border border-gray-700 rounded-lg cursor-pointer hover:bg-[#0F172A]"
                   >
                     <div>
-                      <p className="font-medium text-gray-800">
+                      <p className="font-medium text-white">
                         {s.title}
                       </p>
                       <p className="text-xs text-gray-500">
                         {new Date(s.updatedAt).toLocaleString()}
                       </p>
                     </div>
-                    <span className="text-xs px-2 py-1 rounded bg-blue-100 text-blue-700">
+                    <span className="text-xs px-2 py-1 rounded bg-blue-900 text-blue-300">
                       {s.isActive ? 'Active' : 'Inactive'}
                     </span>
                   </div>

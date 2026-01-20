@@ -47,19 +47,19 @@ const SessionManagement: React.FC<SessionManagementProps> = ({
     <div>
       {/* Header & Filters */}
       <div className="mb-4 flex flex-col md:flex-row justify-between items-center gap-4">
-        <h2 className="text-xl font-semibold text-gray-900">Manage Sessions</h2>
-        <div className="flex flex-col text-gray-900 sm:flex-row gap-2">
+        <h2 className="text-xl font-semibold text-white">Manage Sessions</h2>
+        <div className="flex flex-col text-white sm:flex-row gap-2">
           <input
             type="text"
             placeholder="Search sessions..."
             value={searchTerm}
             onChange={e => setSearchTerm(e.target.value)}
-            className="px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none"
+            className="px-3 py-2 bg-[#1E293B] border border-gray-700 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none text-white placeholder-gray-400"
           />
           <select
             value={statusFilter}
             onChange={e => setStatusFilter(e.target.value as any)}
-            className="px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none"
+            className="px-3 py-2 bg-[#1E293B] border border-gray-700 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none text-white"
           >
             <option value="all">All Statuses</option>
             <option value="active">Active</option>
@@ -68,7 +68,7 @@ const SessionManagement: React.FC<SessionManagementProps> = ({
         </div>
       </div>
 
-      {error && <div className="p-3 mb-4 bg-red-100 text-red-700 rounded">{error}</div>}
+      {error && <div className="p-3 mb-4 bg-red-900 text-red-200 rounded">{error}</div>}
 
       {loading ? (
         <div className="text-center py-8 text-gray-500">Loading sessions...</div>
@@ -79,23 +79,23 @@ const SessionManagement: React.FC<SessionManagementProps> = ({
           {filteredSessions.map(session => (
             <div
               key={session._id}
-              className="bg-white rounded-lg shadow p-4 hover:shadow-lg transition relative"
+              className="bg-[#1E293B] border border-gray-700 rounded-lg p-4 hover:bg-[#2D3748] transition relative"
             >
               <div className="flex justify-between items-start">
-                <h3 className="font-medium text-gray-900 truncate">{session.title}</h3>
+                <h3 className="font-medium text-white truncate">{session.title}</h3>
                 <span
                   className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
-                    session.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                    session.isActive ? 'bg-green-900 text-green-200' : 'bg-red-900 text-red-200'
                   }`}
                 >
                   {session.isActive ? 'Active' : 'Inactive'}
                 </span>
               </div>
 
-              <div className="mt-2 text-sm text-gray-600 space-y-1">
+              <div className="mt-2 text-sm text-gray-400 space-y-1">
                 <p>
                   Session Key:{' '}
-                  <span className="font-mono text-xs bg-gray-200 px-1 rounded">
+                  <span className="font-mono text-xs bg-gray-800 px-1 rounded text-gray-300">
                     {session.sessionKey.substring(0, 8)}...
                   </span>
                 </p>

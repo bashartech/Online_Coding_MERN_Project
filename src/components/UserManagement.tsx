@@ -47,20 +47,20 @@ const UserManagement: React.FC<UserManagementProps> = ({
   return (
     <div>
       <div className="mb-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <h2 className="text-lg font-medium text-gray-900">Manage Users</h2>
+        <h2 className="text-lg font-medium text-white">Manage Users</h2>
 
-        <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 text-gray-900 sm:space-x-4 w-full sm:w-auto">
+        <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 text-white sm:space-x-4 w-full sm:w-auto">
           <input
             type="text"
             placeholder="Search users..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-full sm:w-auto"
+            className="px-3 py-2 bg-[#1E293B] border border-gray-700 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-full sm:w-auto text-white placeholder-gray-400"
           />
           <select
             value={roleFilter}
             onChange={(e) => setRoleFilter(e.target.value)}
-            className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-full sm:w-auto"
+            className="px-3 py-2 bg-[#1E293B] border border-gray-700 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-full sm:w-auto text-white"
           >
             <option value="all">All Roles</option>
             <option value="user">User</option>
@@ -70,13 +70,13 @@ const UserManagement: React.FC<UserManagementProps> = ({
       </div>
 
       {error && (
-        <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-md">
+        <div className="mb-4 p-3 bg-red-900 text-red-200 rounded-md">
           {error}
         </div>
       )}
 
       {loading ? (
-        <div className="text-center py-4">
+        <div className="text-center py-4 text-gray-400">
           <p>Loading users...</p>
         </div>
       ) : (
@@ -84,7 +84,7 @@ const UserManagement: React.FC<UserManagementProps> = ({
           {/* Mobile View - Cards for small screens */}
           <div className="sm:hidden space-y-3 max-h-[60vh] overflow-y-auto custom-scrollbar">
             {filteredUsers.map((user) => (
-              <div key={user._id} className="bg-white border border-gray-200 rounded-lg p-4">
+              <div key={user._id} className="bg-[#1E293B] border border-gray-700 rounded-lg p-4">
                 <div className="flex items-center mb-3">
                   <div className="flex-shrink-0 h-10 w-10">
                     {user.avatar ? (
@@ -92,18 +92,18 @@ const UserManagement: React.FC<UserManagementProps> = ({
                       src={user.avatar}
                        alt="" />
                     ) : (
-                      <div className="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">
-                        <span className="text-sm text-gray-600">
+                      <div className="h-10 w-10 rounded-full bg-gray-700 flex items-center justify-center">
+                        <span className="text-sm text-gray-300">
                           {user.firstName?.charAt(0) || user.lastName?.charAt(0) || ''}
                         </span>
                       </div>
                     )}
                   </div>
                   <div className="ml-3">
-                    <div className="text-sm font-medium text-gray-900">
+                    <div className="text-sm font-medium text-white">
                       {user.firstName} {user.lastName}
                     </div>
-                    <div className="text-sm text-gray-500">
+                    <div className="text-sm text-gray-400">
                       {user.username}
                     </div>
                   </div>
@@ -111,18 +111,18 @@ const UserManagement: React.FC<UserManagementProps> = ({
 
                 <div className="space-y-2 text-sm">
                   <div>
-                    <span className="font-medium text-gray-500">Email:</span>
-                    <span className="ml-2 text-gray-700">{user.email}</span>
+                    <span className="font-medium text-gray-400">Email:</span>
+                    <span className="ml-2 text-gray-300">{user.email}</span>
                   </div>
                   <div>
-                    <span className="font-medium text-gray-500">Role:</span>
+                    <span className="font-medium text-gray-400">Role:</span>
                     <select
                       value={user.role}
                       onChange={(e) => onUpdateUserRole(user.clerkId, e.target.value)}
                       className={`ml-2 text-sm rounded px-2 py-1 ${
                         user.role === 'admin'
-                          ? 'bg-red-100 text-red-800'
-                          : 'bg-blue-100 text-blue-800'
+                          ? 'bg-red-900 text-red-200'
+                          : 'bg-blue-900 text-blue-200'
                       }`}
                     >
                       <option value="user">User</option>
@@ -130,29 +130,29 @@ const UserManagement: React.FC<UserManagementProps> = ({
                     </select>
                   </div>
                   <div>
-                    <span className="font-medium text-gray-500">Status:</span>
+                    <span className="font-medium text-gray-400">Status:</span>
                     <span className={`ml-2 px-2 py-0.5 text-xs leading-5 font-semibold rounded-full ${
                       user.isActive
-                        ? 'bg-green-100 text-green-800'
-                        : 'bg-red-100 text-red-800'
+                        ? 'bg-green-900 text-green-200'
+                        : 'bg-red-900 text-red-200'
                     }`}>
                       {user.isActive ? 'Active' : 'Suspended'}
                     </span>
                   </div>
                   <div>
-                    <span className="font-medium text-gray-500">Joined:</span>
-                    <span className="ml-2 text-gray-700">{new Date(user.createdAt).toLocaleDateString()}</span>
+                    <span className="font-medium text-gray-400">Joined:</span>
+                    <span className="ml-2 text-gray-300">{new Date(user.createdAt).toLocaleDateString()}</span>
                   </div>
                 </div>
 
-                <div className="mt-3 pt-3 border-t border-gray-200">
+                <div className="mt-3 pt-3 border-t border-gray-700">
                   <button
                     onClick={() => onSuspendUser(user.clerkId)}
                     disabled={!user.isActive}
                     className={`text-sm ${
                       user.isActive
-                        ? 'text-red-600 hover:text-red-900'
-                        : 'text-gray-400 cursor-not-allowed'
+                        ? 'text-red-400 hover:text-red-300'
+                        : 'text-gray-500 cursor-not-allowed'
                     }`}
                   >
                     {user.isActive ? 'Suspend User' : 'Suspended'}
@@ -164,30 +164,30 @@ const UserManagement: React.FC<UserManagementProps> = ({
 
           {/* Desktop View - Table for larger screens */}
           <div className="hidden sm:block overflow-x-auto custom-scrollbar">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+            <table className="min-w-full divide-y divide-gray-700">
+              <thead className="bg-[#0F172A]">
                 <tr>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
                     User
                   </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
                     Email
                   </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
                     Role
                   </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
                     Status
                   </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
                     Joined
                   </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
                     Actions
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody className="bg-[#1E293B] divide-y divide-gray-700">
                 {filteredUsers.map((user) => (
                   <tr key={user._id}>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -198,24 +198,24 @@ const UserManagement: React.FC<UserManagementProps> = ({
                             src={user.avatar}
                              alt="" />
                           ) : (
-                            <div className="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">
-                              <span className="text-sm text-gray-600">
+                            <div className="h-10 w-10 rounded-full bg-gray-700 flex items-center justify-center">
+                              <span className="text-sm text-gray-300">
                                 {user.firstName?.charAt(0) || user.lastName?.charAt(0) || ''}
                               </span>
                             </div>
                           )}
                         </div>
                         <div className="ml-4">
-                          <div className="text-sm font-medium text-gray-900">
+                          <div className="text-sm font-medium text-white">
                             {user.firstName} {user.lastName}
                           </div>
-                          <div className="text-sm text-gray-500">
+                          <div className="text-sm text-gray-400">
                             {user.username}
                           </div>
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
                       {user.email}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -224,8 +224,8 @@ const UserManagement: React.FC<UserManagementProps> = ({
                         onChange={(e) => onUpdateUserRole(user.clerkId, e.target.value)}
                         className={`text-sm rounded px-2 py-1 ${
                           user.role === 'admin'
-                            ? 'bg-red-100 text-red-800'
-                            : 'bg-blue-100 text-blue-800'
+                            ? 'bg-red-900 text-red-200'
+                            : 'bg-blue-900 text-blue-200'
                         }`}
                       >
                         <option value="user">User</option>
@@ -235,13 +235,13 @@ const UserManagement: React.FC<UserManagementProps> = ({
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
                         user.isActive
-                          ? 'bg-green-100 text-green-800'
-                          : 'bg-red-100 text-red-800'
+                          ? 'bg-green-900 text-green-200'
+                          : 'bg-red-900 text-red-200'
                       }`}>
                         {user.isActive ? 'Active' : 'Suspended'}
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
                       {new Date(user.createdAt).toLocaleDateString()}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
@@ -250,8 +250,8 @@ const UserManagement: React.FC<UserManagementProps> = ({
                         disabled={!user.isActive}
                         className={`mr-2 ${
                           user.isActive
-                            ? 'text-red-600 hover:text-red-900'
-                            : 'text-gray-400 cursor-not-allowed'
+                            ? 'text-red-400 hover:text-red-300'
+                            : 'text-gray-500 cursor-not-allowed'
                         }`}
                       >
                         {user.isActive ? 'Suspend' : 'Suspended'}

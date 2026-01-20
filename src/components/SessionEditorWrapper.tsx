@@ -1,3 +1,7 @@
+'use client';
+
+import React from "react"
+
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useSession, useUser } from '@clerk/clerk-react';
@@ -430,12 +434,13 @@ const SessionEditorWrapper: React.FC = () => {
   };
 if (loading) {
     return (
-      <div className="min-h-screen flex flex-col bg-black text-gray-100">
+      <div className="min-h-screen flex flex-col bg-slate-950 text-slate-100">
         {/* Header */}
-        <header className="bg-gray-900 shadow-md h-14 flex items-center px-4 sm:px-6 md:px-8 justify-between">
-          <h1 className="text-base sm:text-lg font-semibold text-white">Code Editor</h1>
+        <header className="bg-slate-900 border-b border-slate-700 h-14 flex items-center px-4 sm:px-6 md:px-8 justify-between">
+          {/* <h1 className="text-base sm:text-lg font-bold text-slate-100">Code Collaboration</h1> */}
+          <p className="text-base sm:text-lg font-bold text-slate-100">Code Collaboration</p>
           <div className="flex items-center space-x-2 sm:space-x-3">
-            <button className="px-2 sm:px-3 py-1 text-xs sm:text-sm font-medium text-white bg-gray-700 rounded-md" disabled>
+            <button className="px-3 py-1.5 text-xs sm:text-sm font-medium text-slate-100 bg-slate-700 rounded-lg" disabled>
               Dashboard
             </button>
           </div>
@@ -444,17 +449,12 @@ if (loading) {
         {/* Loading State */}
         <div className="flex-1 flex items-center justify-center">
           <div className="flex flex-col items-center">
-            <div className="relative w-20 h-20 mb-6">
-              <div className="absolute inset-0 rounded-full bg-gradient-to-br from-blue-500 to-cyan-500 animate-pulse"></div>
-              <div className="absolute inset-2 rounded-full bg-gray-900 flex items-center justify-center">
-                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-cyan-500 animate-spin"></div>
-              </div>
+            <div className="relative w-16 h-16 mb-6">
+              <div className="absolute inset-0 rounded-full border-2 border-slate-700"></div>
+              <div className="absolute inset-0 rounded-full border-2 border-transparent border-t-blue-500 animate-spin"></div>
             </div>
-            <div className="text-xl font-medium text-white mb-2">Loading Session</div>
-            <div className="text-gray-400">Connecting to the coding environment...</div>
-            <div className="mt-4 w-48 h-2 bg-gray-800 rounded-full overflow-hidden">
-              <div className="h-full bg-gradient-to-r from-blue-500 to-cyan-500 animate-pulse rounded-full"></div>
-            </div>
+            <div className="text-lg font-semibold text-slate-100 mb-2">Loading Session</div>
+            <div className="text-slate-400 text-sm">Initializing editor and connections...</div>
           </div>
         </div>
       </div>
@@ -462,28 +462,29 @@ if (loading) {
   }
   if (error) {
     return (
-      <div className="min-h-screen flex flex-col bg-black text-gray-100">
+      <div className="min-h-screen flex flex-col bg-slate-950 text-slate-100">
         {/* Header */}
-        <header className="bg-gray-900 shadow-md h-14 flex items-center px-4 sm:px-6 md:px-8 justify-between">
-          <h1 className="text-base sm:text-lg font-semibold text-white">Code Editor</h1>
+        <header className="bg-slate-900 border-b border-slate-700 h-14 flex items-center px-4 sm:px-6 md:px-8 justify-between">
+          {/* <h1 className="text-base sm:text-lg font-bold text-slate-100">Code Collaboration</h1> */}
+          <p className="text-base sm:text-lg font-bold text-slate-100">Code Collaboration</p>
           <div className="flex items-center space-x-2 sm:space-x-3">
-            <button onClick={() => navigate('/dashboard')} className="px-2 sm:px-3 py-1 text-xs sm:text-sm font-medium text-white bg-gray-700 rounded-md hover:bg-gray-600 transition">
+            <button onClick={() => navigate('/dashboard')} className="px-3 py-1.5 text-xs sm:text-sm font-medium text-slate-100 bg-slate-700 rounded-lg hover:bg-slate-600 transition-colors">
               Dashboard
             </button>
           </div>
         </header>
 
         {/* Error State */}
-        <div className="flex-1 flex items-center justify-center">
-          <div className="flex flex-col items-center text-center">
-            <div className="text-2xl font-bold text-red-500 mb-4">Error Loading Session</div>
-            <div className="text-gray-400 mb-2">Something went wrong while loading the session:</div>
-            <div className="text-red-400 mb-6 text-center break-words max-w-md">{error}</div>
+        <div className="flex-1 flex items-center justify-center px-4">
+          <div className="flex flex-col items-center text-center max-w-md">
+            <div className="text-4xl mb-4">⚠️</div>
+            <div className="text-xl font-bold text-red-400 mb-2">Session Error</div>
+            <div className="text-slate-400 mb-4 text-sm">{error}</div>
             <button
               onClick={() => navigate('/dashboard')}
-              className="px-6 py-3 bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white rounded-md transition"
+              className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
             >
-              Go to Dashboard
+              Return to Dashboard
             </button>
           </div>
         </div>
@@ -492,27 +493,29 @@ if (loading) {
   }
   if (!session) {
     return (
-      <div className="min-h-screen flex flex-col bg-black text-gray-100">
+      <div className="min-h-screen flex flex-col bg-slate-950 text-slate-100">
         {/* Header */}
-        <header className="bg-gray-900 shadow-md h-14 flex items-center px-4 sm:px-6 md:px-8 justify-between">
-          <h1 className="text-base sm:text-lg font-semibold text-white">Code Editor</h1>
+        <header className="bg-slate-900 border-b border-slate-700 h-14 flex items-center px-4 sm:px-6 md:px-8 justify-between">
+          {/* <h1 className="text-base sm:text-lg font-bold text-slate-100">Code Collaboration</h1> */}
+          <p className="text-base sm:text-lg font-bold text-slate-100">Code Collaboration</p>
           <div className="flex items-center space-x-2 sm:space-x-3">
-            <button onClick={() => navigate('/dashboard')} className="px-2 sm:px-3 py-1 text-xs sm:text-sm font-medium text-white bg-gray-700 rounded-md hover:bg-gray-600 transition">
+            <button onClick={() => navigate('/dashboard')} className="px-3 py-1.5 text-xs sm:text-sm font-medium text-slate-100 bg-slate-700 rounded-lg hover:bg-slate-600 transition-colors">
               Dashboard
             </button>
           </div>
         </header>
 
         {/* Session Not Found State */}
-        <div className="flex-1 flex items-center justify-center">
-          <div className="flex flex-col items-center text-center">
-            <div className="text-2xl font-bold text-red-500 mb-4">Session Not Found</div>
-            <div className="text-gray-400 mb-6">The session you're looking for doesn't exist or may have expired.</div>
+        <div className="flex-1 flex items-center justify-center px-4">
+          <div className="flex flex-col items-center text-center max-w-md">
+            <div className="text-4xl mb-4">🔍</div>
+            <div className="text-xl font-bold text-slate-100 mb-2">Session Not Found</div>
+            <div className="text-slate-400 mb-6 text-sm">This session doesn't exist or may have expired.</div>
             <button
               onClick={() => navigate('/dashboard')}
-              className="px-6 py-3 bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white rounded-md transition"
+              className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
             >
-              Go to Dashboard
+              Return to Dashboard
             </button>
           </div>
         </div>
@@ -524,30 +527,45 @@ if (loading) {
 
 
  return (
-  <div className="min-h-screen flex flex-col bg-black text-gray-100">
-    {/* Header */}
-    <header className="bg-gray-900 shadow-md h-14 flex items-center px-4 sm:px-6 md:px-8 justify-between">
-      <h1 className="text-base sm:text-lg font-semibold text-white">Code Editor</h1>
-      <div className="flex items-center space-x-2 sm:space-x-3">
-        <button onClick={() => navigate('/profile')} className="px-2 sm:px-3 py-1 text-xs sm:text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition">Profile</button>
-        {authUser?.role === 'admin' && <button onClick={() => navigate('/admin')} className="px-2 sm:px-3 py-1 text-xs sm:text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700 transition">Admin</button>}
-        <button onClick={() => navigate('/dashboard')} className="px-2 sm:px-3 py-1 text-xs sm:text-sm font-medium text-white bg-gray-700 rounded-md hover:bg-gray-600 transition">Dashboard</button>
+  <div className="min-h-screen flex flex-col bg-slate-950 text-slate-100">
+    {/* Main Header */}
+    <header className="bg-slate-900 border-b border-slate-700 h-16 flex items-center px-4 sm:px-6 md:px-8 justify-between gap-4">
+      <div className="flex items-center gap-3 flex-1 min-w-0">
+        {/* <h1 className="text-lg sm:text-xl font-bold text-white">Code Collaboration</h1> */}
+        <p className="text-base sm:text-lg font-bold text-slate-100">Code Collaboration</p>
+        <div className="hidden sm:flex items-center gap-2 ml-4 pl-4 border-l border-slate-700">
+          <div className={`w-2.5 h-2.5 rounded-full ${isSocketConnected ? 'bg-emerald-500' : 'bg-red-500'}`}></div>
+          <span className="text-xs text-slate-400">{isSocketConnected ? 'Connected' : 'Connecting...'}</span>
+        </div>
+      </div>
+      <div className="flex items-center gap-2">
+        <button onClick={() => navigate('/profile')} className="px-3 py-1.5 text-xs sm:text-sm font-medium text-slate-100 bg-slate-700 rounded-lg hover:bg-slate-600 transition-colors">Profile</button>
+        {authUser?.role === 'admin' && <button onClick={() => navigate('/admin')} className="px-3 py-1.5 text-xs sm:text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors">Admin</button>}
+        <button onClick={() => navigate('/dashboard')} className="px-3 py-1.5 text-xs sm:text-sm font-medium text-slate-100 bg-slate-700 rounded-lg hover:bg-slate-600 transition-colors">Dashboard</button>
       </div>
     </header>
 
-    {/* Session Details */}
-    <div className="bg-gray-850 border-b border-gray-800 px-4 sm:px-6 py-2 flex flex-col md:flex-row md:items-center justify-between gap-2 md:gap-3">
-      {/* Title */}
-      <input
-        type="text"
-        value={session.title}
-        onChange={handleTitleChange}
-        placeholder="Session Title..."
-        className="flex-1 max-w-full md:max-w-md text-base sm:text-lg font-semibold text-white bg-gray-800 px-2 sm:px-3 py-1 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-400"
-      />
+    {/* Session Info Bar */}
+    <div className="bg-slate-900 border-b border-slate-700 px-4 sm:px-6 md:px-8 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      {/* Left: Title and Info */}
+      <div className="flex flex-col min-w-0 flex-1">
+        <input
+          type="text"
+          value={session.title}
+          onChange={handleTitleChange}
+          placeholder="Session Title..."
+          className="text-lg sm:text-xl font-bold text-slate-100 bg-transparent border-0 border-b-2 border-slate-700 focus:border-blue-500 focus:outline-none px-0 py-1 placeholder-slate-600 transition-colors"
+        />
+        <div className="flex items-center gap-4 mt-2 text-xs text-slate-400">
+          <span>Created: {new Date(session.createdAt).toLocaleDateString()}</span>
+          <span>•</span>
+          <span>Updated: {new Date(session.updatedAt).toLocaleDateString()}</span>
+        </div>
+      </div>
 
-      {/* Status and Actions */}
-      <div className="flex flex-wrap items-center gap-2 md:gap-3">
+      {/* Right: Status and Actions */}
+      <div className="flex flex-wrap items-center gap-2 sm:gap-3 justify-start sm:justify-end">
+        {/* Presence Indicator */}
         {user && (
           <PresenceIndicator
             sessionKey={session.sessionKey}
@@ -556,34 +574,28 @@ if (loading) {
           />
         )}
 
-        {/* Socket Status */}
-        <div className="flex items-center space-x-1 text-xs sm:text-sm">
-          <div
-            className={`w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full ${isSocketConnected ? 'bg-green-500' : 'bg-red-500'}`}
-            title={isSocketConnected ? 'Connected' : 'Disconnected'}
-          ></div>
-          <span className={`${isSocketConnected ? 'text-green-400' : 'text-red-400'}`}>
-            {isSocketConnected ? 'Connected' : 'Connecting...'}
-          </span>
-        </div>
+        {/* Error Warning */}
+        {socketConnectionError && (
+          <div className="flex items-center gap-1 px-2 py-1 rounded bg-red-900 bg-opacity-30 border border-red-700 text-red-400 text-xs" title={socketConnectionError}>
+            <span>⚠️</span>
+            <span className="hidden sm:inline">Connection Error</span>
+          </div>
+        )}
 
-        {/* Error */}
-        {socketConnectionError && <div className="text-xs sm:text-sm text-red-500 ml-1" title={socketConnectionError}>⚠️</div>}
-
-        {/* Share */}
+        {/* Share Button */}
         <button
           onClick={() => setShowShareModal(true)}
-          className="px-2 sm:px-3 py-1 text-xs sm:text-sm font-medium text-white bg-purple-600 rounded-md hover:bg-purple-700 transition"
+          className="px-4 py-2 text-xs sm:text-sm font-medium text-white bg-purple-600 rounded-lg hover:bg-purple-700 transition-colors"
         >
           Share
         </button>
 
-        {/* Save */}
+        {/* Save Button */}
         <button
           onClick={handleSave}
           disabled={saving}
-          className={`px-2 sm:px-3 py-1 text-xs sm:text-sm font-medium text-white rounded-md transition-transform transform hover:scale-105 ${
-            saving ? 'bg-gray-500 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'
+          className={`px-4 py-2 text-xs sm:text-sm font-medium rounded-lg transition-colors ${
+            saving ? 'bg-slate-600 text-slate-400 cursor-not-allowed' : 'bg-blue-600 text-white hover:bg-blue-700'
           }`}
         >
           {saving ? 'Saving...' : 'Save'}
@@ -591,10 +603,10 @@ if (loading) {
       </div>
     </div>
 
-    {/* Main Content: Chat 30% / Editor 70% */}
-    <div className="flex flex-1 flex-col md:flex-row overflow-hidden">
-      {/* Chat Panel */}
-      <div className="w-full md:w-[30%] bg-gray-900 border-b md:border-b-0 md:border-r border-gray-800 p-2 overflow-y-auto">
+    {/* Main Content: Editor 70% / Chat 30% */}
+    <div className="flex flex-1 flex-col-reverse md:flex-row overflow-hidden bg-slate-950">
+      {/* Chat Panel - Right side */}
+      <div className="w-full md:w-[30%] bg-slate-900 border-t md:border-t-0 md:border-l border-slate-700 overflow-hidden flex flex-col">
         <ChatPanel
           currentUser={user ? { id: user.id, firstName: user.firstName || undefined, lastName: user.lastName || undefined, avatar: user.imageUrl } : null}
           sessionId={session.sessionKey}
@@ -608,8 +620,8 @@ if (loading) {
         />
       </div>
 
-      {/* Code Editor */}
-      <div className="w-full md:w-[70%] bg-gray-950 flex flex-col border-l md:border-l-0 border-gray-800">
+      {/* Code Editor - Left side */}
+      <div className="w-full md:w-[70%] bg-slate-950 flex flex-col overflow-hidden">
         <CodeEditor
           initialCode={session.code}
           initialLanguage={session.language}

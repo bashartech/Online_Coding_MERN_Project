@@ -83,8 +83,8 @@ const PresenceIndicator: React.FC<PresenceIndicatorProps> = ({
   if (loading) {
     return (
       <div className="flex items-center space-x-2 p-2">
-        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-900"></div>
-        <span className="text-xs text-gray-500">Loading presence...</span>
+        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-300"></div>
+        <span className="text-xs text-gray-400">Loading presence...</span>
       </div>
     );
   }
@@ -93,24 +93,24 @@ const PresenceIndicator: React.FC<PresenceIndicatorProps> = ({
     <div className="relative group">
       <div className="flex items-center space-x-1 cursor-pointer">
         <div className="relative">
-          <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white text-xs font-bold">
+          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center text-white text-xs font-bold">
             {activeUsers.length}
           </div>
-          <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
+          <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-[#0D1117]"></div>
         </div>
       </div>
 
       {/* Tooltip/popover - shown on hover/focus */}
-      <div className="absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-lg border border-gray-200 z-50 hidden group-hover:block group-focus:block p-3">
-        <h3 className="font-semibold text-gray-900 mb-2">Active Collaborators</h3>
+      <div className="absolute right-0 mt-2 w-64 bg-[#0D1117] rounded-lg shadow-lg border border-gray-700 z-50 hidden group-hover:block group-focus:block p-3">
+        <h3 className="font-semibold text-white mb-2">Active Collaborators</h3>
         <div className="space-y-2 max-h-60 overflow-y-auto">
           {activeUsers.map((user) => (
             <div
               key={user.userId}
               className={`flex items-center space-x-2 p-2 rounded ${
                 user.userId === currentUserId
-                  ? 'bg-blue-50 border border-blue-200'
-                  : 'hover:bg-gray-50'
+                  ? 'bg-blue-900/30 border border-blue-700/50'
+                  : 'hover:bg-gray-800/50'
               }`}
             >
               <img
@@ -123,7 +123,7 @@ const PresenceIndicator: React.FC<PresenceIndicatorProps> = ({
                 }}
               />
               <div className="flex-1 min-w-0">
-                <p className={`text-sm truncate ${user.userId === currentUserId ? 'font-semibold text-blue-700' : 'text-gray-900'}`}>
+                <p className={`text-sm truncate ${user.userId === currentUserId ? 'font-semibold text-blue-300' : 'text-gray-300'}`}>
                   {user.username}
                   {user.userId === currentUserId && ' (You)'}
                 </p>
