@@ -95,7 +95,7 @@ const Profile: React.FC = () => {
 
   if (authLoading || loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-[#0B0F14] via-[#0D1117] to-[#0B0F14] text-white overflow-hidden">
+      <div className="min-h-screen bg-linear-to-b from-[#0B0F14] via-[#0D1117] to-[#0B0F14] text-white overflow-hidden">
         {/* Header */}
         <header className="bg-gray-900 shadow-md h-14 flex items-center px-4 sm:px-6 md:px-8 justify-between">
           <h1 className="text-base sm:text-lg font-semibold text-white">Profile</h1>
@@ -128,16 +128,16 @@ const Profile: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-[#0B0F14] text-white">
       {/* Profile Header */}
-      <header className="bg-white shadow">
+      <header className="bg-[#0D1117] border-b border-gray-800">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
-              <h1 className="text-xl font-semibold text-gray-900">Profile</h1>
+              <h1 className="text-xl font-semibold text-white">Profile</h1>
             </div>
             <div className="flex items-center space-x-4">
-              <span className="text-sm text-gray-600">
+              <span className="text-sm text-gray-300">
                 {authUser?.username || authUser?.email || clerkUser?.username || clerkUser?.emailAddresses?.[0]?.emailAddress}
               </span>
               <button
@@ -153,33 +153,33 @@ const Profile: React.FC = () => {
 
       <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
         <div className="px-4 py-6 sm:px-0">
-          <div className="bg-white shadow rounded-lg p-6">
+          <div className="bg-[#0D1117] border border-gray-800 rounded-lg p-6">
             {/* User Profile Section */}
             <div className="mb-8">
-              <h2 className="text-lg font-medium text-gray-900 mb-4">Personal Information</h2>
+              <h2 className="text-lg font-medium text-white mb-4">Personal Information</h2>
 
               <div className="flex items-center mb-6">
                 {clerkUser?.imageUrl ? (
                   <img
                     src={clerkUser.imageUrl}
                     alt="Profile"
-                    className="w-2 h-2 rounded-full object-cover mr-4"
+                    className="w-16 h-16 rounded-full object-cover mr-4"
                   />
                 ) : (
-                  <div className="w-16 h-16 rounded-full bg-gray-200 flex items-center justify-center mr-4">
-                    <span className="text-gray-600 text-xl">
+                  <div className="w-16 h-16 rounded-full bg-gray-700 flex items-center justify-center mr-4">
+                    <span className="text-gray-300 text-xl">
                       {clerkUser?.firstName?.charAt(0) || clerkUser?.lastName?.charAt(0) || '?'}
                     </span>
                   </div>
                 )}
 
                 <div>
-                  <h3 className="text-lg font-medium text-gray-900">
+                  <h3 className="text-lg font-medium text-white">
                     {clerkUser?.firstName && clerkUser?.lastName
                       ? `${clerkUser.firstName} ${clerkUser.lastName}`
                       : clerkUser?.username || clerkUser?.emailAddresses?.[0]?.emailAddress || 'Anonymous User'}
                   </h3>
-                  <p className="text-gray-600">
+                  <p className="text-gray-400">
                     {clerkUser?.emailAddresses?.[0]?.emailAddress || 'No email provided'}
                   </p>
                   <p className="text-sm text-gray-500 mt-1">
@@ -193,10 +193,10 @@ const Profile: React.FC = () => {
 
             {/* Owned Sessions Section */}
             <div>
-              <h2 className="text-lg font-medium text-gray-900 mb-4">Your Sessions</h2>
+              <h2 className="text-lg font-medium text-white mb-4">Your Sessions</h2>
 
               {error && (
-                <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-md">
+                <div className="mb-4 p-3 bg-red-900 text-red-200 rounded-md">
                   {error}
                 </div>
               )}
@@ -207,26 +207,26 @@ const Profile: React.FC = () => {
                 </div>
               ) : sessions.length === 0 ? (
                 <div className="text-center py-8">
-                  <p className="text-gray-600">You don't have any sessions yet.</p>
+                  <p className="text-gray-400">You don't have any sessions yet.</p>
                   <button
                     onClick={createNewSession}
-                    className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                    className="mt-4 px-4 py-2 bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-md hover:from-blue-600 hover:to-cyan-600"
                   >
                     Create Your First Session
                   </button>
                 </div>
               ) : (
-                <div className="overflow-hidden shadow ring-1 ring-black ring-opacity-5 md:rounded-lg">
-                  <table className="min-w-full divide-y divide-gray-300">
-                    <thead className="bg-gray-50">
+                <div className="overflow-hidden border border-gray-700 rounded-lg">
+                  <table className="min-w-full divide-y divide-gray-700">
+                    <thead className="bg-gray-800">
                       <tr>
-                        <th scope="col" className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6">
+                        <th scope="col" className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-white sm:pl-6">
                           Title
                         </th>
-                        <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
+                        <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-white">
                           Language
                         </th>
-                        <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
+                        <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-white">
                           Last Updated
                         </th>
                         <th scope="col" className="relative py-3.5 pl-3 pr-4 sm:pr-6">
@@ -234,22 +234,22 @@ const Profile: React.FC = () => {
                         </th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-gray-200 bg-white">
+                    <tbody className="divide-y divide-gray-700 bg-[#0D1117]">
                       {sessions.map((session) => (
                         <tr key={session.sessionId}>
-                          <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">
+                          <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-white sm:pl-6">
                             {session.title}
                           </td>
-                          <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+                          <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-400">
                             {session.language}
                           </td>
-                          <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+                          <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-400">
                             {new Date(session.updatedAt).toLocaleDateString()}
                           </td>
                           <td className="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
                             <button
                               onClick={() => navigate(`/session/${session.sessionId}`)}
-                              className="text-blue-600 hover:text-blue-900"
+                              className="text-blue-400 hover:text-blue-300"
                             >
                               View<span className="sr-only">, {session.title}</span>
                             </button>

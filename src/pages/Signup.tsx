@@ -68,9 +68,9 @@ const Signup: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#0B0F14] via-[#0D1117] to-[#0B0F14] text-white overflow-hidden">
+    <div className="min-h-screen bg-[#0B0F14] text-white">
       {/* Navigation */}
-      <nav className="pt-6 pb-12 px-6">
+      <nav className="pt-4 pb-6 px-4 sm:px-6">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-lg flex items-center justify-center">
@@ -78,7 +78,7 @@ const Signup: React.FC = () => {
             </div>
             <span className="font-bold text-lg">CodeCollab</span>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="hidden md:flex items-center gap-3">
             <Link to="/login" className="text-sm text-gray-300 hover:text-white transition px-4 py-2 rounded-md">
               Sign In
             </Link>
@@ -86,13 +86,21 @@ const Signup: React.FC = () => {
               Get Started
             </Link>
           </div>
+          {/* Mobile menu button */}
+          <div className="md:hidden">
+            <button className="text-gray-300 hover:text-white">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            </button>
+          </div>
         </div>
       </nav>
 
-      <div className="flex justify-center items-center px-6">
+      <div className="flex justify-center items-center px-4 sm:px-6 py-8">
         <div className="w-full max-w-md">
           <div className="text-center mb-8">
-            <h1 className="text-3xl md:text-4xl font-bold mb-2">Create your account</h1>
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-2">Create your account</h1>
             <p className="text-gray-400">Start coding together in real-time</p>
           </div>
 
@@ -134,7 +142,7 @@ const Signup: React.FC = () => {
       </div>
 
       {/* Footer */}
-      <footer className="border-t border-gray-800 py-8 px-6 mt-16">
+      <footer className="border-t border-gray-800 py-6 px-4 sm:px-6 mt-8">
         <div className="max-w-7xl mx-auto text-center">
           <p className="text-sm text-gray-500">© 2025 CodeCollab. All rights reserved.</p>
         </div>

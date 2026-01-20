@@ -121,23 +121,23 @@ const JoinSessionPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-      <div className="bg-white rounded-xl shadow-2xl p-8 max-w-md w-full animate-slideUp">
+    <div className="min-h-screen bg-[#0B0F14] text-white flex items-center justify-center px-4">
+      <div className="bg-[#0D1117] rounded-xl border border-gray-800 p-8 max-w-md w-full">
         {/* Header */}
         <div className="text-center mb-6">
-          <div className="mx-auto bg-blue-100 w-16 h-16 rounded-full flex items-center justify-center mb-4">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <div className="mx-auto bg-gradient-to-br from-blue-500 to-cyan-500 w-16 h-16 rounded-full flex items-center justify-center mb-4">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
             </svg>
           </div>
-          <h1 className="text-2xl font-bold text-gray-900">Join Session</h1>
-          <p className="text-gray-600 mt-2">You've been invited to a coding session</p>
+          <h1 className="text-2xl font-bold text-white">Join Session</h1>
+          <p className="text-gray-400 mt-2">You've been invited to a coding session</p>
         </div>
 
         {/* Session Info Card */}
-        <div className="mb-6 bg-gray-50 p-4 rounded-lg border border-gray-200">
-          <h2 className="font-semibold text-gray-800 mb-2 truncate">{sessionInfo.title}</h2>
-          <div className="text-sm text-gray-600 space-y-1">
+        <div className="mb-6 bg-[#0F172A] p-4 rounded-lg border border-gray-700">
+          <h2 className="font-semibold text-white mb-2 truncate">{sessionInfo.title}</h2>
+          <div className="text-sm text-gray-400 space-y-1">
             <p><span className="font-medium">Owner:</span> {sessionInfo.ownerId}</p>
             <p><span className="font-medium">Participants:</span> {sessionInfo.collaborators?.length + 1 || 1} / {sessionInfo.maxParticipants}</p>
             <p><span className="font-medium">Access Code:</span> {accessCode}</p>
@@ -147,10 +147,10 @@ const JoinSessionPage: React.FC = () => {
         {/* Join / Sign-in Buttons */}
         {!isSignedIn ? (
           <div className="mb-6 text-center">
-            <p className="text-gray-600 mb-4">You need to sign in to join this session</p>
+            <p className="text-gray-400 mb-4">You need to sign in to join this session</p>
             <button
               onClick={() => navigate('/login')}
-              className="w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-transform transform hover:scale-105"
+              className="w-full px-4 py-2 bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-md hover:from-blue-600 hover:to-cyan-600 transition"
             >
               Sign In to Join
             </button>
@@ -160,15 +160,15 @@ const JoinSessionPage: React.FC = () => {
             <button
               onClick={handleJoinSession}
               disabled={joining}
-              className={`w-full px-4 py-2 text-white rounded-md font-medium transition-transform transform ${
-                joining ? 'bg-blue-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700 hover:scale-105'
+              className={`w-full px-4 py-2 text-white rounded-md font-medium transition ${
+                joining ? 'bg-gray-600 cursor-not-allowed' : 'bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600'
               }`}
             >
               {joining ? 'Joining Session...' : 'Join Session'}
             </button>
             <button
               onClick={() => navigate('/dashboard')}
-              className="w-full px-4 py-2 text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 transition-transform transform hover:scale-105"
+              className="w-full px-4 py-2 text-gray-300 bg-gray-700 rounded-md hover:bg-gray-600 transition"
             >
               Cancel
             </button>
@@ -177,13 +177,13 @@ const JoinSessionPage: React.FC = () => {
 
         {/* Signed-in User Info */}
         {isSignedIn && (
-          <div className="mt-6 pt-6 border-t border-gray-200 text-center">
-            <p className="text-sm text-gray-600 mb-2">Signed in as:</p>
+          <div className="mt-6 pt-6 border-t border-gray-800 text-center">
+            <p className="text-sm text-gray-400 mb-2">Signed in as:</p>
             <div className="flex items-center justify-center">
               {clerkUser?.imageUrl && (
                 <img src={clerkUser.imageUrl} alt="Avatar" className="w-8 h-8 rounded-full mr-2" />
               )}
-              <span className="text-sm font-medium text-gray-800">
+              <span className="text-sm font-medium text-white">
                 {clerkUser?.fullName || clerkUser?.emailAddresses?.[0]?.emailAddress || 'User'}
               </span>
             </div>
@@ -194,7 +194,7 @@ const JoinSessionPage: React.FC = () => {
                 await signOut();
                 navigate('/login');
               }}
-              className="mt-3 text-sm text-blue-600 hover:text-blue-800 transition-transform transform hover:scale-105"
+              className="mt-3 text-sm text-blue-400 hover:text-blue-300 transition"
             >
               Sign Out
             </button>

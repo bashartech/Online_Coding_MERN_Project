@@ -1,3 +1,5 @@
+'use client';
+
 
 import React, { useState, useEffect, useRef } from 'react';
 
@@ -73,29 +75,26 @@ const ChatPanel: React.FC<ChatWidgetProps> = ({
   ============================ */
   if (layoutMode === 'embedded' || isEmbedded) {
     return (
-      <div className="flex h-full w-full flex-col bg-[#0D1117] text-gray-200 border-l border-gray-800">
-        
+      <div className="flex h-full w-full flex-col bg-slate-900 text-slate-100 border-l border-slate-700">
         {/* Header */}
-        <div className="flex items-center justify-between px-4 h-[40px] border-b border-gray-800">
-          <div className="flex items-center gap-2 text-sm font-medium">
-            <span>Session Chat</span>
-            <span className="text-xs text-gray-400">
-              • {activeUsers.length} online
+        <div className="flex items-center justify-between px-4 h-12 border-b border-slate-700 bg-slate-800">
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 rounded-full bg-green-500"></div>
+            <span className="text-sm font-semibold text-slate-100">Chat</span>
+            <span className="text-xs text-slate-400 ml-1">
+              {activeUsers.length} online
             </span>
           </div>
-          {/* <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-200"
-          >
-            ✕
-          </button> */}
         </div>
 
         {/* Messages */}
-        <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3">
+        <div className="flex-1 overflow-y-auto px-3 py-4 space-y-3 bg-slate-900">
           {messages.length === 0 ? (
-            <div className="flex h-full items-center justify-center text-sm text-gray-500">
-              No messages yet
+            <div className="flex h-full items-center justify-center">
+              <div className="text-center">
+                <div className="text-2xl mb-2 opacity-30">💬</div>
+                <p className="text-xs text-slate-500">No messages yet</p>
+              </div>
             </div>
           ) : (
             messages.map((msg, index) => {
@@ -110,19 +109,19 @@ const ChatPanel: React.FC<ChatWidgetProps> = ({
                   className={`flex ${isCurrentUser ? 'justify-end' : 'justify-start'}`}
                 >
                   <div
-                    className={`max-w-[75%] px-3 py-2 rounded-md text-sm ${
+                    className={`max-w-[80%] px-3 py-2 rounded-lg text-sm ${
                       isCurrentUser
-                        ? 'bg-blue-600 text-white'
-                        : 'bg-[#161B22] text-gray-200 border border-gray-800'
+                        ? 'bg-blue-600 text-white rounded-br-none'
+                        : 'bg-slate-800 text-slate-100 border border-slate-700 rounded-bl-none'
                     }`}
                   >
                     {!isCurrentUser && (
-                      <div className="text-xs text-gray-400 mb-1">
+                      <div className="text-xs text-slate-400 font-medium mb-1">
                         {displayName}
                       </div>
                     )}
-                    <div>{msg.message}</div>
-                    <div className="text-[10px] mt-1 opacity-60 text-right">
+                    <div className="break-words">{msg.message}</div>
+                    <div className={`text-[10px] mt-1 opacity-50 ${isCurrentUser ? 'text-blue-100' : 'text-slate-400'}`}>
                       {formatTime(msg.timestamp)}
                     </div>
                   </div>
@@ -136,20 +135,20 @@ const ChatPanel: React.FC<ChatWidgetProps> = ({
         {/* Input */}
         <form
           onSubmit={handleSend}
-          className="border-t border-gray-800 p-3 flex gap-2"
+          className="border-t border-slate-700 p-3 flex gap-2 bg-slate-800"
         >
           <input
             type="text"
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
-            placeholder="Message…"
+            placeholder="Type a message..."
             maxLength={500}
-            className="flex-1 bg-[#0D1117] border border-gray-800 rounded px-3 py-2 text-sm text-gray-200 placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-blue-600"
+            className="flex-1 bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
           />
           <button
             type="submit"
             disabled={!newMessage.trim()}
-            className="px-4 py-2 text-sm rounded bg-blue-600 hover:bg-blue-700 disabled:opacity-50"
+            className="px-4 py-2 text-sm font-medium rounded-lg bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             Send
           </button>

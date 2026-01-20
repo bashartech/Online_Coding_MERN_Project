@@ -1,3 +1,7 @@
+'use client';
+
+import React from "react"
+
 
 // export default CodeEditor;
 
@@ -72,73 +76,84 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
   };
 
   return (
-    <div className="flex h-full w-full bg-[#0D1117] text-gray-200">
-      <div className="flex w-full flex-col overflow-hidden">
-        
-        {/* Minimal Top Bar */}
-        <div className="flex h-[40px] items-center justify-between border-b border-gray-800 bg-[#0D1117] px-3">
-          
-          {/* File label (future-proof, still minimal) */}
-          <div className="text-xs text-gray-400 tracking-wide">
-            {currentFile}
+    <div className="flex flex-col h-full w-full bg-gray-700 text-slate-200">
+      {/* Editor Toolbar */}
+      <div className="flex items-center justify-between h-12 px-4 bg-slate-900 border-b border-slate-700 gap-4">
+        {/* File Info */}
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-mono bg-slate-800 px-2 py-1 rounded text-slate-300">
+              {currentFile || 'untitled'}
+            </span>
+            <span className="text-slate-500 text-xs">•</span>
+            <span className="text-xs text-slate-400">
+              {effectiveLanguage.charAt(0).toUpperCase() + effectiveLanguage.slice(1)}
+            </span>
           </div>
-
-          {/* Language selector */}
-          <select
-            value={effectiveLanguage}
-            onChange={(e) => {
-              if (onCodeChange) {
-                onCodeChange(effectiveCode, e.target.value, 'main.py');
-              }
-            }}
-            className="bg-[#0D1117] text-gray-300 text-xs border border-gray-800 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-blue-500 hover:border-gray-700"
-          >
-            <option value="javascript">JavaScript</option>
-            <option value="typescript">TypeScript</option>
-            <option value="python">Python</option>
-            <option value="java">Java</option>
-            <option value="cpp">C++</option>
-            <option value="c">C</option>
-            <option value="go">Go</option>
-            <option value="rust">Rust</option>
-            <option value="php">PHP</option>
-            <option value="ruby">Ruby</option>
-            <option value="sql">SQL</option>
-            <option value="html">HTML</option>
-            <option value="css">CSS</option>
-          </select>
         </div>
 
-        {/* Monaco Editor */}
-        <div className="flex-1 overflow-hidden">
-          <Editor
-            height="100%"
-            width="100%"
-            theme={theme}
-            onMount={handleEditorDidMount}
-            path="main.py"
-            language={effectiveLanguage}
-            value={effectiveCode}
-            onChange={handleCodeChangeInternal}
-            options={{
-              readOnly,
-              minimap: { enabled: true },
-              fontSize: 14,
-              scrollBeyondLastLine: false,
-              automaticLayout: true,
-              tabSize: 2,
-              insertSpaces: true,
-              lineNumbers: 'on',
-              roundedSelection: false,
-              scrollbar: {
-                vertical: 'auto',
-                horizontal: 'auto'
-              },
-              overviewRulerLanes: 2,
-              overviewRulerBorder: false,
-            }}
-          />
-        </div>
+        {/* Language Selector */}
+        <select
+          value={effectiveLanguage}
+          onChange={(e) => {
+            if (onCodeChange) {
+              onCodeChange(effectiveCode, e.target.value, 'main.py');
+            }
+          }}
+          className="ml-auto bg-slate-800 text-slate-100 text-xs border border-slate-700 rounded px-3 py-1.5 focus:outline-none focus:ring-1 focus:ring-blue-500 hover:border-slate-600 transition-colors cursor-pointer"
+        >
+          <option value="javascript">JavaScript</option>
+          <option value="typescript">TypeScript</option>
+          <option value="python">Python</option>
+          <option value="java">Java</option>
+          <option value="cpp">C++</option>
+          <option value="c">C</option>
+          <option value="go">Go</option>
+          <option value="rust">Rust</option>
+          <option value="php">PHP</option>
+          <option value="ruby">Ruby</option>
+          <option value="sql">SQL</option>
+          <option value="html">HTML</option>
+          <option value="css">CSS</option>
+        </select>
+      </div>
+
+      {/* Monaco Editor */}
+      <div className="flex-1 pt-1 overflow-hidden bg-neutral-900">
+        <Editor
+          height="100%"
+          width="100%"
+          theme={theme}
+          onMount={handleEditorDidMount}
+          path="main.py"
+          language={effectiveLanguage}
+          value={effectiveCode}
+          onChange={handleCodeChangeInternal}
+          options={{
+            readOnly,
+            minimap: { enabled: true, scale: 1 },
+            fontSize: 13,
+            scrollBeyondLastLine: false,
+            automaticLayout: true,
+            tabSize: 2,
+            insertSpaces: true,
+            lineNumbers: 'on',
+            roundedSelection: false,
+            fontFamily: 'Menlo, Monaco, "Courier New", monospace',
+            scrollbar: {
+              vertical: 'auto',
+              horizontal: 'auto',
+              verticalSliderSize: 10,
+              horizontalSliderSize: 10,
+            },
+            overviewRulerLanes: 2,
+            overviewRulerBorder: false,
+            bracketPairColorization: {
+              enabled: true,
+            },
+            
+          }}
+        />
       </div>
     </div>
   );

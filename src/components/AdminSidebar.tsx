@@ -33,14 +33,14 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({
 
       {/* Sidebar */}
       <aside
-        className={`fixed inset-y-0 left-0 z-50 w-64 bg-gray-900 text-gray-100 shadow-lg
+        className={`fixed inset-y-0 left-0 z-50 w-64 bg-[#0D1117] text-white shadow-lg
         transform transition-transform duration-300 ease-in-out
-        ${isOpen ? "translate-x-0" : "-translate-x-full"} lg:translate-x-0 lg:static`}
+        ${isOpen ? "translate-x-0" : "-translate-x-full"} lg:translate-x-0 lg:static border-r border-gray-800`}
       >
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-gray-800">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center shadow">
+            <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-lg flex items-center justify-center shadow">
               <span className="font-bold text-white">AP</span>
             </div>
             <h2 className="text-lg font-semibold tracking-wide">Admin Panel</h2>
@@ -67,7 +67,7 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({
                   className={`flex items-center px-4 py-3 rounded-lg text-sm font-medium transition-all w-full
                   ${
                     activeTab === tab.id
-                      ? "bg-blue-600 text-white shadow"
+                      ? "bg-gradient-to-r from-blue-500 to-cyan-500 text-white shadow"
                       : "text-gray-300 hover:bg-gray-800 hover:text-white"
                   }`}
                 >
