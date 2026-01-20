@@ -80,12 +80,12 @@ const ShareSessionModal: React.FC<ShareSessionModalProps> = ({
               {/* Shareable Link */}
               <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
                 <p className="text-sm text-gray-600 mb-1">Shareable Link:</p>
-                <div className="flex items-center">
+                <div className="flex  items-center">
                   <input
                     type="text"
                     value={link}
                     readOnly
-                    className="flex-1 border border-gray-300 rounded-l px-3 py-2 text-sm truncate focus:ring-1 focus:ring-blue-500 outline-none"
+                    className="flex-1 border border-gray-300 text-black rounded-l px-3 py-2 text-sm truncate focus:ring-1 focus:ring-blue-500 outline-none"
                   />
                   <button
                     onClick={handleCopyLink}
