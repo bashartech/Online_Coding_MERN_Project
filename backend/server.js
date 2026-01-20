@@ -102,7 +102,7 @@ io.on('connection', (socket) => {
       socket.emit('error', { error: 'Authentication error' });
     }
   });
-
+ 
   // Join a session room - with authorization check
   socket.on('join-session', async (data) => {
     const { sessionKey, userId } = data;
@@ -244,12 +244,12 @@ io.on('connection', (socket) => {
     socket.emit('presence-list', {
       users: getActiveUsersInSession(sessionKey)
     });
-
+ 
     // Broadcast updated presence list to all users in the session
     io.to(sessionKey).emit('presence-update', {
       users: getActiveUsersInSession(sessionKey)
     });
-
+  
     // Notify admins about the new session activity via access code
     const sessionInfo = await Session.findOne({ sessionKey: sessionKey }).select('title language isActive createdAt');
 

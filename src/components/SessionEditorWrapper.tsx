@@ -51,9 +51,7 @@ const SessionEditorWrapper: React.FC = () => {
   const [socketConnectionError, setSocketConnectionError] = useState<string | null>(null);
   const [activeUsers, setActiveUsers] = useState<any[]>([]);
   const [messages, setMessages] = useState<any[]>([]);
-  const [showChat, setShowChat] = useState<boolean>(false);
   const [showShareModal, setShowShareModal] = useState<boolean>(false);
-  const [accessCode, setAccessCode] = useState<string>('');
   const [generatingLink, setGeneratingLink] = useState<boolean>(false);
   const socketInitialized = useRef<boolean>(false);
 
@@ -99,7 +97,7 @@ const SessionEditorWrapper: React.FC = () => {
       // Rejoin session after reconnection if session and user are available
       if (session && user) {
         const sessionKey = session.sessionKey; // Use the sessionKey from the session data
-        joinSession(sessionKey, user.id, (error, result) => {
+        joinSession(sessionKey, user.id, (error) => {
           if (error) {
             console.error('Error rejoining session:', error);
             setSocketConnectionError(error.error || 'Failed to rejoin session');
@@ -186,7 +184,7 @@ const SessionEditorWrapper: React.FC = () => {
       // Join the session using sessionKey for socket operations
       const sessionKey = session.sessionKey; // Use the sessionKey from the session data
 
-      joinSession(sessionKey, user.id, (error, result) => {
+      joinSession(sessionKey, user.id, (error) => {
         if (error) {
           console.error('Error joining session:', error);
           setSocketConnectionError(error.error || 'Failed to join session');
@@ -336,7 +334,7 @@ const SessionEditorWrapper: React.FC = () => {
   }, [session, navigate]);
 
   // Handle code changes from the editor
-  const handleCodeChange = useCallback((newValue: string | undefined, language: string, fileName: string) => {
+  const handleCodeChange = useCallback((newValue: string | undefined, language: string) => {
     if (session && user) {
       try {
         // Update local state
@@ -419,7 +417,6 @@ const SessionEditorWrapper: React.FC = () => {
 
       if (response.ok) {
         const data = await response.json();
-        setAccessCode(data.accessCode);
         return data.accessCode;
       } else {
         throw new Error('Failed to generate access code');
@@ -431,156 +428,126 @@ const SessionEditorWrapper: React.FC = () => {
       setGeneratingLink(false);
     }
   };
+if (loading) return <div className="flex justify-center items-center min-h-screen text-xl">Loading session...</div>;
+  if (error) return <div className="flex justify-center items-center min-h-screen text-xl text-red-500">{error}</div>;
+  if (!session) return <div className="flex justify-center items-center min-h-screen text-xl">Session not found</div>;
 
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center min-h-screen">
-        <div className="text-xl">Loading session...</div>
+
+
+
+ return (
+  <div className="min-h-screen flex flex-col bg-black text-gray-100">
+    {/* Header */}
+    <header className="bg-gray-900 shadow-md h-14 flex items-center px-4 sm:px-6 md:px-8 justify-between">
+      <h1 className="text-base sm:text-lg font-semibold text-white">Code Editor</h1>
+      <div className="flex items-center space-x-2 sm:space-x-3">
+        <button onClick={() => navigate('/profile')} className="px-2 sm:px-3 py-1 text-xs sm:text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition">Profile</button>
+        {authUser?.role === 'admin' && <button onClick={() => navigate('/admin')} className="px-2 sm:px-3 py-1 text-xs sm:text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700 transition">Admin</button>}
+        <button onClick={() => navigate('/dashboard')} className="px-2 sm:px-3 py-1 text-xs sm:text-sm font-medium text-white bg-gray-700 rounded-md hover:bg-gray-600 transition">Dashboard</button>
       </div>
-    );
-  }
+    </header>
 
-  if (error) {
-    return (
-      <div className="flex justify-center items-center min-h-screen">
-        <div className="text-xl text-red-500">{error}</div>
-      </div>
-    );
-  }
-
-  if (!session) {
-    return (
-      <div className="flex justify-center items-center min-h-screen">
-        <div className="text-xl">Session not found</div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
-      <nav className="bg-white shadow">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16">
-            <div className="flex items-center">
-              <h1 className="text-xl font-semibold text-gray-900">Code Editor</h1>
-            </div>
-            <div className="flex items-center space-x-4">
-              <button
-                onClick={() => navigate('/profile')}
-                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700"
-              >
-                Profile
-              </button>
-              {authUser && authUser.role === 'admin' && (
-                <button
-                  onClick={() => navigate('/admin')}
-                  className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700"
-                >
-                  Admin Dashboard
-                </button>
-              )}
-              <button
-                onClick={() => navigate('/dashboard')}
-                className="px-4 py-2 text-sm font-medium text-white bg-gray-600 rounded-md hover:bg-gray-700"
-              >
-                Back to Dashboard
-              </button>
-            </div>
-          </div>
-        </div>
-      </nav>
-
-      <main className="flex-1 flex flex-col max-w-7xl mx-auto py-0 sm:px-0 lg:px-0">
-        <div className="px-4 py-3 sm:px-0 border-b border-gray-200 bg-white">
-          <div className="flex justify-between items-center">
-            <input
-              type="text"
-              value={session.title}
-              onChange={handleTitleChange}
-              className="text-xl font-semibold text-gray-900 bg-transparent border-none outline-none flex-1"
-            />
-            <div className="flex items-center space-x-4 ml-4">
-              {/* Presence indicator */}
-              {user && session && (
-                <PresenceIndicator
-                  sessionKey={session.sessionKey}
-                  currentUserId={user.id}
-                  onPresenceUpdate={setActiveUsers}
-                />
-              )}
-
-              {/* Socket connection status indicator */}
-              <div className="flex items-center">
-                <div className={`w-3 h-3 rounded-full mr-2 ${isSocketConnected ? 'bg-green-500' : 'bg-red-500'}`}></div>
-                <span className="text-sm text-gray-600">
-                  {isSocketConnected ? 'Connected' : 'Connecting...'}
-                </span>
-              </div>
-              {socketConnectionError && (
-                <div className="text-sm text-red-500 ml-2" title={socketConnectionError}>
-                  ⚠️ Connection Issue
-                </div>
-              )}
-              <button
-                onClick={() => setShowShareModal(true)}
-                className="ml-2 px-4 py-2 text-sm font-medium text-white bg-purple-600 rounded-md hover:bg-purple-700"
-              >
-                Share Session
-              </button>
-              <button
-                onClick={handleSave}
-                disabled={saving}
-                className={`ml-2 px-4 py-2 text-sm font-medium text-white rounded-md ${
-                  saving ? 'bg-gray-400' : 'bg-blue-600 hover:bg-blue-700'
-                }`}
-              >
-                {saving ? 'Saving...' : 'Save Code'}
-              </button>
-            </div>
-          </div>
-        </div>
-        <div className="flex-1 p-0">
-          <div className="h-[calc(100vh-150px)]">
-            <CodeEditor
-              initialCode={session.code}
-              initialLanguage={session.language}
-              onCodeChange={handleCodeChange}
-              height="100%"
-              theme="vs-dark"
-              codeValue={session.code}
-              languageValue={session.language}
-            />
-          </div>
-        </div>
-      </main>
-
-      {/* Chat Panel */}
-      <ChatPanel
-        currentUser={user ? {
-          id: user.id,
-          firstName: user.firstName || undefined,
-          lastName: user.lastName || undefined,
-          avatar: user.imageUrl
-        } : null}
-        sessionId={session.sessionKey}
-        onSendMessage={handleSendMessage}
-        messages={messages}
-        activeUsers={activeUsers}
-        isVisible={showChat}
-        onClose={() => setShowChat(false)}
-        onToggleChat={() => setShowChat(!showChat)}
+    {/* Session Details */}
+    <div className="bg-gray-850 border-b border-gray-800 px-4 sm:px-6 py-2 flex flex-col md:flex-row md:items-center justify-between gap-2 md:gap-3">
+      {/* Title */}
+      <input
+        type="text"
+        value={session.title}
+        onChange={handleTitleChange}
+        placeholder="Session Title..."
+        className="flex-1 max-w-full md:max-w-md text-base sm:text-lg font-semibold text-white bg-gray-800 px-2 sm:px-3 py-1 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-400"
       />
 
-      {/* Share Session Modal */}
-      <ShareSessionModal
-        isOpen={showShareModal}
-        onClose={() => setShowShareModal(false)}
-        sessionId={session.sessionId}
-        onGenerateLink={handleGenerateLink}
-        isLoading={generatingLink}
-      />
+      {/* Status and Actions */}
+      <div className="flex flex-wrap items-center gap-2 md:gap-3">
+        {user && (
+          <PresenceIndicator
+            sessionKey={session.sessionKey}
+            currentUserId={user.id}
+            onPresenceUpdate={setActiveUsers}
+          />
+        )}
+
+        {/* Socket Status */}
+        <div className="flex items-center space-x-1 text-xs sm:text-sm">
+          <div
+            className={`w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full ${isSocketConnected ? 'bg-green-500' : 'bg-red-500'}`}
+            title={isSocketConnected ? 'Connected' : 'Disconnected'}
+          ></div>
+          <span className={`${isSocketConnected ? 'text-green-400' : 'text-red-400'}`}>
+            {isSocketConnected ? 'Connected' : 'Connecting...'}
+          </span>
+        </div>
+
+        {/* Error */}
+        {socketConnectionError && <div className="text-xs sm:text-sm text-red-500 ml-1" title={socketConnectionError}>⚠️</div>}
+
+        {/* Share */}
+        <button
+          onClick={() => setShowShareModal(true)}
+          className="px-2 sm:px-3 py-1 text-xs sm:text-sm font-medium text-white bg-purple-600 rounded-md hover:bg-purple-700 transition"
+        >
+          Share
+        </button>
+
+        {/* Save */}
+        <button
+          onClick={handleSave}
+          disabled={saving}
+          className={`px-2 sm:px-3 py-1 text-xs sm:text-sm font-medium text-white rounded-md transition-transform transform hover:scale-105 ${
+            saving ? 'bg-gray-500 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'
+          }`}
+        >
+          {saving ? 'Saving...' : 'Save'}
+        </button>
+      </div>
     </div>
-  );
+
+    {/* Main Content: Chat 30% / Editor 70% */}
+    <div className="flex flex-1 flex-col md:flex-row overflow-hidden">
+      {/* Chat Panel */}
+      <div className="w-full md:w-[30%] bg-gray-900 border-b md:border-b-0 md:border-r border-gray-800 p-2 overflow-y-auto">
+        <ChatPanel
+          currentUser={user ? { id: user.id, firstName: user.firstName || undefined, lastName: user.lastName || undefined, avatar: user.imageUrl } : null}
+          sessionId={session.sessionKey}
+          onSendMessage={handleSendMessage}
+          messages={messages}
+          activeUsers={activeUsers}
+          isVisible={true}
+          onClose={() => {}}
+          onToggleChat={() => {}}
+          layoutMode="embedded"
+        />
+      </div>
+
+      {/* Code Editor */}
+      <div className="w-full md:w-[70%] bg-gray-950 flex flex-col border-l md:border-l-0 border-gray-800">
+        <CodeEditor
+          initialCode={session.code}
+          initialLanguage={session.language}
+          onCodeChange={handleCodeChange}
+          height="100%"
+          theme="vs-dark"
+          codeValue={session.code}
+          languageValue={session.language}
+        />
+      </div>
+    </div>
+
+    {/* Share Modal */}
+    <ShareSessionModal
+      isOpen={showShareModal}
+      onClose={() => setShowShareModal(false)}
+      sessionId={session.sessionId}
+      onGenerateLink={handleGenerateLink}
+      isLoading={generatingLink}
+    />
+  </div>
+);
+
+
+
+
 };
 
 export default SessionEditorWrapper;

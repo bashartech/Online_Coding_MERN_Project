@@ -2,8 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import {
   onPresenceUpdate as subscribeToPresenceUpdate,
   onPresenceList as subscribeToPresenceList,
-  onUserJoined,
-  onUserLeft
+
 } from '../services/socketService';
 
 interface UserPresence {
@@ -24,7 +23,6 @@ interface PresenceIndicatorProps {
 }
 
 const PresenceIndicator: React.FC<PresenceIndicatorProps> = ({
-  sessionKey,
   currentUserId,
   onPresenceUpdate
 }) => {

@@ -5,14 +5,57 @@ import apiClient from '../utils/api';
 import { useNavigate } from 'react-router-dom';
 
 const Profile: React.FC = () => {
-  const { user: clerkUser, isLoaded: clerkLoaded } = useUser();
+    const { user: clerkUser,isSignedIn, isLoaded: clerkLoaded } = useUser();
   const { session } = useSession();
   const { user: authUser, loading: authLoading } = useAuth();
+
   const [sessions, setSessions] = useState<any[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
 
+    const createNewSession = async () => {
+      try {
+        // Don't proceed if session is not ready or user is not authenticated
+        if (!session) {
+          alert('Session not ready. Please sign in again.');
+          return;
+        }
+  
+        // Check if user is actually authenticated via Clerk
+        if (!isSignedIn) {
+          alert('User not authenticated. Please sign in again.');
+          return;
+        }
+        
+  
+        // Additional check: verify session status and user details
+        console.log("Session details:", {
+          status: session.status,
+          id: session.id,
+          userId: session.user?.id, // Use session.user?.id instead of session.userId
+          lastActiveAt: session.lastActiveAt
+        });
+  
+        // Get the Clerk authentication token using the proper Clerk hooks
+        const token = session ? await session.getToken() : null;
+        console.log("Generated token:", token ? "Token present" : "Token not generated");
+        const response = await apiClient.post('/api/sessions', {}, token || undefined); 
+   
+        if (response.ok) { 
+          const data = await response.json(); 
+          // Redirect to the new session editor page 
+          navigate(`/session/${data.sessionId}`); 
+        } else { 
+          console.error('Failed to create session:', await response.text()); 
+          alert('Failed to create session'); 
+        } 
+      } catch (error) { 
+        console.error('Error creating session:', error); 
+        alert('Error creating session'); 
+      } 
+    };
+  
   // Fetch user's owned sessions
   useEffect(() => {
     const fetchUserSessions = async () => {
@@ -97,7 +140,7 @@ const Profile: React.FC = () => {
               <div className="flex items-center mb-6">
                 {clerkUser?.imageUrl ? (
                   <img
-                    src=""
+                    src={clerkUser.imageUrl}
                     alt="Profile"
                     className="w-2 h-2 rounded-full object-cover mr-4"
                   />
@@ -145,7 +188,7 @@ const Profile: React.FC = () => {
                 <div className="text-center py-8">
                   <p className="text-gray-600">You don't have any sessions yet.</p>
                   <button
-                    onClick={() => navigate('/editor')}
+                    onClick={createNewSession}
                     className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
                   >
                     Create Your First Session

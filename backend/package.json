@@ -30,7 +30,8 @@
     "helmet": "^7.0.0",
     "http": "^0.0.1-security",
     "jsonwebtoken": "^9.0.2",
-    "mongoose": "^7.5.0",
+    "mongodb": "^7.0.0",
+    "mongoose": "^9.1.4",
     "socket.io": "^4.7.2",
     "socket.io-adapter": "^2.5.2",
     "uuid": "^13.0.0"

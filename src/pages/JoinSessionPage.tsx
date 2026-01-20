@@ -1,13 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
 import { useUser, useAuth as useClerkAuth } from '@clerk/clerk-react';
 import apiClient from '../utils/api';
 
 const JoinSessionPage: React.FC = () => {
   const { accessCode } = useParams<{ accessCode: string }>();
   const navigate = useNavigate();
-  const { user: authUser, isAuthenticated, loading } = useAuth();
   const { user: clerkUser, isSignedIn } = useUser();
   const { signOut } = useClerkAuth();
 
@@ -22,7 +20,6 @@ const JoinSessionPage: React.FC = () => {
         setLoadingSession(true);
         setError(null);
 
-        // Fetch session info by access code
         const response = await apiClient.get(`/api/sessions/access/${accessCode}`);
 
         if (response.ok) {
@@ -41,39 +38,27 @@ const JoinSessionPage: React.FC = () => {
       }
     };
 
-    if (accessCode) {
-      fetchSessionInfo();
-    }
+    if (accessCode) fetchSessionInfo();
   }, [accessCode]);
 
-  const handleJoinSession = async () => {
+  const handleJoinSession = () => {
     if (!sessionInfo) {
       setError('No session information available');
       return;
     }
-
     if (!isSignedIn) {
       setError('You must be logged in to join a session');
       return;
     }
 
     setJoining(true);
-    try {
-      // Since the user is authenticated and the access code is valid,
-      // we can simply redirect to the session page
-      // The SessionEditorWrapper will handle joining the session via socket
-      navigate(`/session/${sessionInfo.sessionId}`);
-    } catch (err) {
-      console.error('Error joining session:', err);
-      setError('Error joining session');
-      setJoining(false);
-    }
+    navigate(`/session/${sessionInfo.sessionId}`);
   };
 
-  if (loading || loadingSession) {
+  if (loadingSession) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-xl">Loading session...</div>
+        <div className="text-xl animate-pulse">Loading session...</div>
       </div>
     );
   }
@@ -81,13 +66,13 @@ const JoinSessionPage: React.FC = () => {
   if (error) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="bg-white p-8 rounded-lg shadow-md max-w-md w-full text-center">
-          <div className="text-red-500 text-2xl mb-4">⚠️</div>
-          <h2 className="text-xl font-semibold text-gray-800 mb-2">Error</h2>
+        <div className="bg-white p-8 rounded-xl shadow-2xl max-w-md w-full text-center animate-fadeIn">
+          <div className="text-red-500 text-3xl mb-4">⚠️</div>
+          <h2 className="text-2xl font-semibold text-gray-800 mb-2">Error</h2>
           <p className="text-gray-600 mb-6">{error}</p>
           <button
             onClick={() => navigate('/dashboard')}
-            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-transform transform hover:scale-105"
           >
             Go to Dashboard
           </button>
@@ -99,13 +84,13 @@ const JoinSessionPage: React.FC = () => {
   if (!sessionInfo) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="bg-white p-8 rounded-lg shadow-md max-w-md w-full text-center">
-          <div className="text-yellow-500 text-2xl mb-4">⚠️</div>
-          <h2 className="text-xl font-semibold text-gray-800 mb-2">Session Not Found</h2>
+        <div className="bg-white p-8 rounded-xl shadow-2xl max-w-md w-full text-center animate-fadeIn">
+          <div className="text-yellow-500 text-3xl mb-4">⚠️</div>
+          <h2 className="text-2xl font-semibold text-gray-800 mb-2">Session Not Found</h2>
           <p className="text-gray-600 mb-6">The session you're trying to join doesn't exist or the access code is invalid.</p>
           <button
             onClick={() => navigate('/dashboard')}
-            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-transform transform hover:scale-105"
           >
             Go to Dashboard
           </button>
@@ -115,8 +100,9 @@ const JoinSessionPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="bg-white p-8 rounded-lg shadow-md max-w-md w-full">
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
+      <div className="bg-white rounded-xl shadow-2xl p-8 max-w-md w-full animate-slideUp">
+        {/* Header */}
         <div className="text-center mb-6">
           <div className="mx-auto bg-blue-100 w-16 h-16 rounded-full flex items-center justify-center mb-4">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -124,11 +110,12 @@ const JoinSessionPage: React.FC = () => {
             </svg>
           </div>
           <h1 className="text-2xl font-bold text-gray-900">Join Session</h1>
-          <p className="text-gray-600 mt-2">You've been invited to join a coding session</p>
+          <p className="text-gray-600 mt-2">You've been invited to a coding session</p>
         </div>
 
-        <div className="mb-6 bg-gray-50 p-4 rounded-lg">
-          <h2 className="font-semibold text-gray-800 mb-2">{sessionInfo.title}</h2>
+        {/* Session Info Card */}
+        <div className="mb-6 bg-gray-50 p-4 rounded-lg border border-gray-200">
+          <h2 className="font-semibold text-gray-800 mb-2 truncate">{sessionInfo.title}</h2>
           <div className="text-sm text-gray-600 space-y-1">
             <p><span className="font-medium">Owner:</span> {sessionInfo.ownerId}</p>
             <p><span className="font-medium">Participants:</span> {sessionInfo.collaborators?.length + 1 || 1} / {sessionInfo.maxParticipants}</p>
@@ -136,12 +123,13 @@ const JoinSessionPage: React.FC = () => {
           </div>
         </div>
 
+        {/* Join / Sign-in Buttons */}
         {!isSignedIn ? (
           <div className="mb-6 text-center">
             <p className="text-gray-600 mb-4">You need to sign in to join this session</p>
             <button
               onClick={() => navigate('/login')}
-              className="w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+              className="w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-transform transform hover:scale-105"
             >
               Sign In to Join
             </button>
@@ -151,32 +139,28 @@ const JoinSessionPage: React.FC = () => {
             <button
               onClick={handleJoinSession}
               disabled={joining}
-              className={`w-full px-4 py-2 text-white rounded-md font-medium ${
-                joining ? 'bg-blue-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'
+              className={`w-full px-4 py-2 text-white rounded-md font-medium transition-transform transform ${
+                joining ? 'bg-blue-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700 hover:scale-105'
               }`}
             >
               {joining ? 'Joining Session...' : 'Join Session'}
             </button>
-
             <button
               onClick={() => navigate('/dashboard')}
-              className="w-full px-4 py-2 text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300"
+              className="w-full px-4 py-2 text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 transition-transform transform hover:scale-105"
             >
               Cancel
             </button>
           </div>
         )}
 
+        {/* Signed-in User Info */}
         {isSignedIn && (
           <div className="mt-6 pt-6 border-t border-gray-200 text-center">
             <p className="text-sm text-gray-600 mb-2">Signed in as:</p>
             <div className="flex items-center justify-center">
               {clerkUser?.imageUrl && (
-                <img
-                  src={clerkUser.imageUrl}
-                  alt="Avatar"
-                  className="w-8 h-8 rounded-full mr-2"
-                />
+                <img src={clerkUser.imageUrl} alt="Avatar" className="w-8 h-8 rounded-full mr-2" />
               )}
               <span className="text-sm font-medium text-gray-800">
                 {clerkUser?.fullName || clerkUser?.emailAddresses?.[0]?.emailAddress || 'User'}
@@ -184,17 +168,12 @@ const JoinSessionPage: React.FC = () => {
             </div>
             <button
               onClick={async () => {
-                // Clear local token and user data
                 localStorage.removeItem('token');
                 localStorage.removeItem('user');
-
-                // Sign out from Clerk
                 await signOut();
-
-                // Navigate to login
                 navigate('/login');
               }}
-              className="mt-3 text-sm text-blue-600 hover:text-blue-800"
+              className="mt-3 text-sm text-blue-600 hover:text-blue-800 transition-transform transform hover:scale-105"
             >
               Sign Out
             </button>

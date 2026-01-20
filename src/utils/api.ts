@@ -1,6 +1,6 @@
 // API utility functions for backend communication
 
-const BACKEND_URL = 'http://localhost:5000'; // Backend server URL
+const BACKEND_URL = 'https://bashartc14-online-cod-collab.hf.space'; // Backend server URL
 
 export const apiClient = {
   get: async (endpoint: string, authToken?: string, options: RequestInit = {}) => {
